@@ -47,6 +47,9 @@ export default function Home() {
         <Link href="/" className="logo">
           Kiss<span>And</span>Quiz
         </Link>
+        <Link href="/account/" className="back">
+          My account
+        </Link>
       </header>
 
       <section className="hero">
@@ -71,7 +74,9 @@ export default function Home() {
         ))}
       </div>
 
-      <footer>Made with ❤️ for couples · kissandquiz.com</footer>
+      <footer>
+        Made with ❤️ for couples · kissandquiz.com · <Link href="/privacy/">Privacy</Link>
+      </footer>
     </main>
   );
 }

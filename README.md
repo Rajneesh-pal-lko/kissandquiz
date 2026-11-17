@@ -27,11 +27,14 @@ npm run build    # static site in ./out
 2. In Vercel → Project → Settings → Environment Variables, add `MONGODB_URI` (MongoDB Atlas connection string; see `.env.example`). Redeploy after adding it.
 3. In MongoDB Atlas → Network Access, allow `0.0.0.0/0` (Vercel functions have changing IPs). Use a strong database password.
 
+4. Optional accounts: add `RESEND_API_KEY`, `EMAIL_FROM` and `SITE_URL` (see `.env.example`). Needs a domain verified in Resend. Without them, `/account/` shows "coming soon"; everything else works.
+
 Without `MONGODB_URI` in production, the site still works: quiz links fall back to the old long `/play/#…` format and creators can't see results.
 
 ### Data
 - `quizzes`: `{ _id: shortId, n, a, ownerHash, createdAt }`. `results`: `{ quizId, partner, guesses, score, total, createdAt }`.
 - Both auto-delete after 180 days (TTL index on `createdAt`, created automatically).
+- Accounts (optional, creators only): `users` `{ _id, email (unique), name, createdAt, lastLoginAt }`, `loginTokens` (hashed, 15-min TTL), `sessions` (hashed, 30-day TTL, httpOnly cookie `kq_session`). Quizzes get `ownerUserId` when made while signed in or claimed from the phone. Deleting an account deletes its quizzes and results.
 - The creator's secret token is kept only on their phone; the database stores its SHA-256 hash.
 
 ## Project layout

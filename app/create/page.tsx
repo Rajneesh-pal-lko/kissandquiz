@@ -374,6 +374,9 @@ export default function CreatePage() {
               <button className="link-btn" onClick={copyPrivate}>
                 {copiedPrivate ? "Private link copied ✓" : "Copy my private results link"}
               </button>
+              <p className="muted">
+                Or <Link href="/account/">save it to a free account</Link> to see results on any phone.
+              </p>
             </div>
           ) : (
             <p className="muted center tip">Tip: the link is saved on this phone, so you can come back here to copy it again.</p>

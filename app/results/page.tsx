@@ -28,7 +28,10 @@ function QuizResults({ q, open }: { q: MyQuiz; open: boolean }) {
   const fetchResults = useCallback(async () => {
     setStatus({ kind: "loading" });
     try {
-      const res = await fetch(`/api/quiz/${q.id}/results/`, { headers: { "x-owner-token": q.token }, cache: "no-store" });
+      const res = await fetch(`/api/quiz/${q.id}/results/`, {
+        headers: q.token ? { "x-owner-token": q.token } : {},
+        cache: "no-store",
+      });
       if (res.status === 404) return setStatus({ kind: "gone" });
       if (!res.ok) return setStatus({ kind: "error" });
       setStatus({ kind: "ok", data: (await res.json()) as Loaded });
@@ -114,6 +117,7 @@ function QuizResults({ q, open }: { q: MyQuiz; open: boolean }) {
 export default function ResultsPage() {
   const [quizzes, setQuizzes] = useState<MyQuiz[] | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useState(false);
 
   useEffect(() => {
     // A private results link adds that quiz to this phone's list.
@@ -126,7 +130,21 @@ export default function ResultsPage() {
       // Remove the secret from the address bar.
       window.history.replaceState(null, "", "/results/");
     }
-    setQuizzes(listMyQuizzes());
+    const local = listMyQuizzes();
+    setQuizzes(local);
+    // Signed in? Also show quizzes saved in the account (e.g. made on another phone).
+    fetch("/api/me/", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((me: { quizzes: { id: string; n: string; createdAt: string }[] } | null) => {
+        if (!me) return;
+        setSignedIn(true);
+        const known = new Set(local.map((q) => q.id));
+        const extra = me.quizzes
+          .filter((q) => !known.has(q.id))
+          .map((q) => ({ id: q.id, token: "", name: q.n, createdAt: q.createdAt }));
+        if (extra.length) setQuizzes([...local, ...extra].sort((x, y) => (x.createdAt < y.createdAt ? 1 : -1)));
+      })
+      .catch(() => {});
   }, []);
 
   if (quizzes === null) return <main className="wrap" />;
@@ -141,8 +159,8 @@ export default function ResultsPage() {
         <div className="card">
           <p>No quizzes on this phone yet.</p>
           <p className="muted">
-            Results show up on the phone you made the quiz on, or open the private results link you saved when you made
-            it.
+            Results show up on the phone you made the quiz on, in your account if you're signed in, or through the
+            private results link you saved when you made it.
           </p>
           <Link href="/create/" className="btn">
             Create my quiz
@@ -153,6 +171,8 @@ export default function ResultsPage() {
       )}
       <p className="muted center tip">
         <Link href="/create/">Make another quiz →</Link>
+        {" · "}
+        <Link href="/account/">{signedIn ? "My account" : "See results on any phone →"}</Link>
       </p>
     </main>
   );

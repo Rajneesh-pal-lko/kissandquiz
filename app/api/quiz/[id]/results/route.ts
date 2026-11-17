@@ -1,7 +1,8 @@
 // GET /api/quiz/<id>/results   header: x-owner-token: <token>
-// Only the creator (who holds the secret token) can read the partner's results.
+// Only the creator can read the partner's results: by secret token, or signed in as the quiz's owner.
 import { timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
+import { currentUser } from "@/lib/auth";
 import { QUIZ_ID_RE } from "@/lib/quizRules";
 import { hashToken, store, storeAvailable } from "@/lib/store";
 
@@ -17,12 +18,14 @@ function sameHash(a: string, b: string): boolean {
 export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   const token = req.headers.get("x-owner-token") ?? "";
-  if (!QUIZ_ID_RE.test(id) || !token) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!QUIZ_ID_RE.test(id)) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (!storeAvailable()) return NextResponse.json({ error: "unavailable" }, { status: 503 });
   try {
     const quiz = await store().getQuiz(id);
     // Same response for "no quiz" and "wrong token", so IDs can't be probed.
-    if (!quiz || !sameHash(quiz.ownerHash, hashToken(token))) {
+    const byToken = Boolean(quiz && token && sameHash(quiz.ownerHash, hashToken(token)));
+    const byAccount = Boolean(quiz?.ownerUserId && !byToken && (await currentUser())?._id === quiz.ownerUserId);
+    if (!quiz || (!byToken && !byAccount)) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
     const results = await store().listResults(id);
