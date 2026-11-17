@@ -111,6 +111,19 @@ Key facts:
 **Hosting risk:** Vercel Hobby is **non-commercial only** (ads/affiliate not allowed). Cloudflare Pages free tier allows commercial use, unlimited bandwidth, and has Workers + D1 for a small backend. Supabase free pauses after 7 days idle (bad for quiz links opened weeks later).
 **Privacy:** storing names/answers brings India's DPDP Act into play (full compliance due May 2027). Keep data minimal, add a privacy notice, auto-delete old quizzes.
 
+### Original strategy PDF vs. where we are (reviewed 2026-11-18, session 6)
+The founding doc is **"AI Couple Games — Brand Strategy" (PDF, Nov 2026)**: 14 game ideas, 4 phases, a 12-week Valentine's test, and the pass/fail rule **"30%+ of players send the link; 10%+ come back in week 2"** (fail → switch niche).
+| PDF said | What we did | Note |
+| --- | --- | --- |
+| Pick a name first (Dono, Saath, Hum Do…) | **KissAndQuiz** | Saath rejected (taken) |
+| Weeks 1–4: domain, Next.js on Vercel, game 1 | Game 1 + short links + creator results + accounts + redesign, all live | **Ahead on code. Domain still not bought.** |
+| Supabase | MongoDB Atlas Free | Supabase free pauses when idle; Mongo is fine |
+| Week 5: AdSense + email list + AI directories | Not done | AdSense **deferred** (Vercel Hobby forbids ads; new sites usually get "low value content" rejection; India RPM low) |
+| Weeks 6–7: Truth or Dare + Love Letter writer, Product Hunt | Not started | Love Letter is ChatGPT-replaceable; build two-player things first |
+| Weeks 8–11: 20–30 Shorts/Reels | Not started | **Start in December, not week 8** |
+| Measure send rate + week-2 return | **No analytics yet** | Biggest gap: we can't run the PDF's test without it |
+Fresh checks (2026-11-18): Vercel Hobby still bans ads, AdSense, affiliate-first sites and even donations; Pro is $20/month. Next.js 15 can run on Cloudflare Workers via the OpenNext adapter (free plan: 100K requests/day, 3 MiB worker limit). AdSense restricts sexually suggestive content, so spicy modes must stay off ad pages. Couple-test trends keep coming (12 questions, forest question, bird test, "would you still love me if I was a worm"); "send this to your partner" captions are still the common hook. Rose Day 2027 = Sun Feb 7; Valentine's Day 2027 = Sun Feb 14.
+
 ---
 
 ## 5. Roadmap (priority order)
@@ -121,7 +134,22 @@ Key facts:
 
 ---
 
+### Valentine's 2027 plan (proposed 2026-11-18, session 6; waiting for Raj's OK)
+Rule: **distribution is now the bottleneck, not code.** No new big features (no paid tier, no Ludo, no AI API) before Feb 15.
+| Week | Build (evenings/weekends) | Distribution |
+| --- | --- | --- |
+| Nov 18–24 | Buy domain, switch env vars, test on 2 real phones (WhatsApp/Instagram in-app browsers). **Funnel tracking:** tag quizzes made from a partner's score screen (`fromQuiz`), so the DB shows created → played → partner made own quiz. Search Console + sitemap | Reserve `kissandquiz` handles (Instagram, YouTube, X) |
+| Nov 25–Dec 8 | Score-card image (canvas) for WhatsApp/Stories | First 6–8 Shorts/Reels: screen-record real partner reactions, "send this to your partner" |
+| Dec 9–22 | Love Calculator + FLAMES (Hinglish, funnels into game 1). Publish `/valentine-week/` hub page early (so Google indexes it) | 2–3 videos/week |
+| Dec 23–Jan 12 | Game 2 "Would You Still Love Me If…" (static bank, reaction card) | r/SideProject + Indie Hackers posts |
+| Jan 13–Feb 6 | Valentine Week hub: one small tool/card per day (Rose → Valentine's), reusing existing pieces. Truth or Dare (mild/medium default, spicy opt-in, noindex) only if time | Product Hunt launch late Jan; daily posts from Feb 1 |
+| Feb 7–14 | Bug fixes only | Post daily (one per Valentine Week day) |
+| Feb 15 | **Review:** share rate, partner completion, % partners who make their own quiz, week-2 return. Then pick: daily question + streaks (retention bet) vs. India games (Ludo/Antakshari) | |
+Money decision: stay on Vercel Hobby with **no ads** through Valentine's. After Feb 15, if traffic is real, choose Vercel Pro ($20/mo) or move to Cloudflare Workers (OpenNext) before any ads/affiliate/payments.
+
 ## 6. Next steps
+**Session 6 (proposed, priority order):** 1) buy kissandquiz.com + handles, 2) real-phone test, 3) funnel tracking (`fromQuiz`) + Search Console, 4) score-card image, 5) start Shorts/Reels in December, 6) Love Calculator/FLAMES + early `/valentine-week/` page, 7) Game 2, 8) Valentine Week hub, 9) Feb 15 review. Items below are the older list (still valid; step 5 MongoDB is done, see session 4).
+
 Proposed order after Research 2:
 1. Test the current flows on two real phones (WhatsApp and Instagram in-app browsers, Chrome, Safari).
 2. Buy kissandquiz.com (+ kissnquiz.com redirect); reserve the `kissandquiz` handles.
@@ -139,6 +167,13 @@ Proposed order after Research 2:
 ---
 
 ## 7. Progress log
+### 2026-11-18 (session 6) — Strategy review vs. original PDF
+- Raj shared the founding "AI Couple Games — Brand Strategy" PDF and asked how to proceed. Compared it with what's built (table in section 4) and re-checked the web: Vercel Hobby terms, OpenNext on Cloudflare, AdSense content rules and new-site rejections, current couple trends, Valentine Week 2027 dates.
+- Findings: code is ahead of the PDF's plan; domain, analytics and content/distribution are behind. We can't run the PDF's pass/fail test (30% send, 10% return) without tracking.
+- Proposed (waiting for Raj): the Valentine's 2027 week-by-week plan in section 5; no ads before Feb 15; funnel tracking via a `fromQuiz` field; start videos in December.
+- No code changed.
+- Next: Raj confirms the plan and buys the domain; then funnel tracking + score card.
+
 ### 2026-11-18 (session 5) — UI redesign v2
 - Raj asked for a professional, mobile-first redesign with animations and richer visuals than text + emoji. Researched 2026 UI trends (motion-first UI, tactile/"light skeuomorphic" buttons, bento/card grids, dopamine colours), couple apps (Paired's warm rebrand, partner-name framing), quiz-site patterns, Duolingo-style micro-interactions, and licences for 3D/animated emoji (Fluent Emoji = MIT; Noto animated = CC BY 4.0, not used).
 - Decision (Claude, for Raj to review): design system **"Blush & Plum"** (see section 3), Fluent 3D + animated emoji, Bricolage Grotesque + Plus Jakarta Sans, CSS-only motion with reduce-motion support. No new runtime libraries (only the two font packages).
