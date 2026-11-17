@@ -33,7 +33,7 @@ To verify still: domain purchase, Instagram/YouTube/X handles (`kissandquiz`), t
 - **Hosting plan:** Vercel (free), with the custom domain kissandquiz.com. Raj already hosts happynewyear2027.in on Vercel (domain from GoDaddy).
 - **Commands:** `npm install`, `npm run dev` (localhost:3000), `npm run build` (output in `./out`).
 
-### Design system v2 "Blush & Plum" (2026-11-18, branch `redesign-v2`)
+### Design system v2 "Blush & Plum" (2026-11-18, live on `main`)
 - **Look:** warm cream background (`#fff6f3`) with three slow-drifting blurred blobs (blush, peach, lilac), plum-black text (`#2a0f1f`), brand pink `#e8336f` for accents and a deeper gradient (`#e62a6c → #b8134f`) for buttons so white text passes contrast. Chunky "press-down" buttons (Duolingo-style bottom edge), 24–32 px rounded cards, soft pink shadows. WhatsApp buttons are bright green with **dark** text (white on `#25d366` failed contrast).
 - **Fonts:** Bricolage Grotesque (headings) + Plus Jakarta Sans (body), self-hosted via `@fontsource-variable/*` (OFL, no Google Fonts request). Hindi names fall back to the system font.
 - **Icons:** Microsoft **Fluent Emoji 3D** (MIT) instead of the phone's own emoji, so every phone looks the same. Static: `public/emoji/3d/<codepoint>.webp` (256 px, ~5 KB each). Animated: `public/emoji/anim/<name>.webp` (converted from Microsoft's animated APNGs to animated WebP, 128–192 px, 50–150 KB each), used only for hero heart, share-screen party popper, score reactions and CTA bands. Licence file: `public/emoji/LICENSE-fluent-emoji.txt`. To add an icon: copy from the npm package `@lobehub/fluent-emoji-3d` (`assets/<codepoint>.webp`).
@@ -123,7 +123,6 @@ Key facts:
 
 ## 6. Next steps
 Proposed order after Research 2:
-0. **Raj: review the redesign** on phone and laptop: branch `redesign-v2` (commit `fc562bc`), Vercel preview under the project's Deployments tab (`kissandquiz-git-redesign-v2-…vercel.app`). If happy, merge `redesign-v2` → `main` (PR: https://github.com/Rajneesh-pal-lko/kissandquiz/pull/new/redesign-v2).
 1. Test the current flows on two real phones (WhatsApp and Instagram in-app browsers, Chrome, Safari).
 2. Buy kissandquiz.com (+ kissnquiz.com redirect); reserve the `kissandquiz` handles.
 3. Hosting: **stay on Vercel Hobby for now** (decided 2026-11-17). Before turning on ads, affiliate links or payments, either upgrade to Vercel Pro or move to Cloudflare Pages. Keep code portable (no Vercel-only features) so a move stays cheap.
@@ -143,11 +142,13 @@ Proposed order after Research 2:
 ### 2026-11-18 (session 5) — UI redesign v2
 - Raj asked for a professional, mobile-first redesign with animations and richer visuals than text + emoji. Researched 2026 UI trends (motion-first UI, tactile/"light skeuomorphic" buttons, bento/card grids, dopamine colours), couple apps (Paired's warm rebrand, partner-name framing), quiz-site patterns, Duolingo-style micro-interactions, and licences for 3D/animated emoji (Fluent Emoji = MIT; Noto animated = CC BY 4.0, not used).
 - Decision (Claude, for Raj to review): design system **"Blush & Plum"** (see section 3), Fluent 3D + animated emoji, Bricolage Grotesque + Plus Jakarta Sans, CSS-only motion with reduce-motion support. No new runtime libraries (only the two font packages).
-- Built on branch **`redesign-v2`** (not merged): every page restyled (home, game page, create, play, score, results, broken links, account, verify, privacy), sticky glass header + footer, sticky mobile CTA, default share image + favicon + Apple icon, FAQ + JSON-LD on the game page. Fixed contrast on pink and WhatsApp buttons. Partner sees no "Play free" button while playing (less distraction). Pages scroll to top on step change.
+- Built on branch **`redesign-v2`** (merged to `main` the same night): every page restyled (home, game page, create, play, score, results, broken links, account, verify, privacy), sticky glass header + footer, sticky mobile CTA, default share image + favicon + Apple icon, FAQ + JSON-LD on the game page. Fixed contrast on pink and WhatsApp buttons. Partner sees no "Play free" button while playing (less distraction). Pages scroll to top on step change.
 - Merged the redesign with session 3's account feature (account/verify/privacy pages restyled; results page keeps the signed-in quiz list; share screen keeps "save it to a free account").
 - `metadataBase` now reads `SITE_URL` so share images get absolute URLs.
 - Tested: production build passes; full flow on 390 px and 360 px phones (create → short link → partner plays → score → creator results), long-link fallback, Hindi name, broken/expired links, account sign-in with dev link, privacy page. No console errors except the expected 401 from `/api/me/` when signed out. Not yet checked on real phones or inside WhatsApp/Instagram in-app browsers.
-- Next: Raj reviews the preview and merges; then score-card image, analytics, Love Calculator/FLAMES.
+- Raj reviewed the preview and approved. **Merged `redesign-v2` → `main`** (fast-forward). Preview showed "Accounts are coming soon" because Vercel's `MONGODB_URI`/Resend env vars are set for Production only; on production the account page works.
+- Decision (home page, for later): keep the single featured game while there is one. Once 3+ games are live: general hero + featured button picked from real play data + "Trending" row; special takeover for Valentine's Week. Needs analytics first.
+- Next: test on real phones (WhatsApp/Instagram in-app browsers); then score-card image, analytics, Love Calculator/FLAMES.
 
 ### 2026-11-18 (session 4)
 - Live at https://kissandquiz-mu.vercel.app with MongoDB + Resend configured: `/api/me/` returns `{"error":"signed_out","accounts":true}`.
