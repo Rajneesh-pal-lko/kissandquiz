@@ -39,10 +39,13 @@ To verify still: domain purchase, Instagram/YouTube/X handles (`kissandquiz`), t
 | `app/page.tsx` | Home page = **game store**: hero + "Play now" and "Coming soon" card grids, built from `lib/games.ts` |
 | `lib/games.ts` | Game catalog (slug, title, tagline, emoji, status live/soon, category, time, card colours). To launch a game: add its page under `app/games/<slug>/` and set status to `live` |
 | `app/games/how-well-do-you-know-me/page.tsx` | Game 1 intro page (old home content) with its own SEO title, links to `/create/` |
-| `app/create/page.tsx` | Creator enters a name, answers 10 random questions about themselves, gets a share link plus WhatsApp and copy buttons |
-| `app/play/page.tsx` | Partner opens the link, guesses each answer (right/wrong shown), gets a score and verdict, can send the score on WhatsApp and make their own quiz |
-| `lib/questions.ts` | Bank of 20 questions, 4 options each, Indian-flavoured. **Only append; never reorder or delete** (links store question indexes) |
-| `lib/quizLink.ts` | Encodes `{n: name, a: [[questionIdx, answerIdx], …]}` as base64url in the URL **hash** (`/play/#…`). UTF-8 safe (Hindi and emoji tested). Light obfuscation, not security |
+| `app/create/page.tsx` | Creator flow: name → 10 questions (Back/Next, auto-advance on tap, 🔄 swap question) → review screen (tap to edit, change name) → share (WhatsApp, native share, copy, edit answers, new quiz). Draft saved in localStorage (`kq.create.v1`) so refresh doesn't lose work |
+| `app/create/layout.tsx` | Share/SEO metadata for `/create/` |
+| `app/play/page.tsx` | Partner flow: intro → guess each question (one guess, locked after reveal, shows creator's answer) with Back/Next → score + verdict → "See all answers" review, send score on WhatsApp / native share, play again, make own quiz. Progress saved in sessionStorage per link; reloads on hash change |
+| `app/play/layout.tsx` | Share preview title "How well do you know me? 💘"; `noindex` (quiz links are personal) |
+| `lib/questions.ts` | **81 questions (78 active)** in 7 categories (favourites, habits, personality, love, past, future, funny), 4–6 options each. Index = stable ID. **Only append; never reorder or delete questions or options.** Use `retired: true` to stop picking a question (old links still decode). Picker takes max 2 per category. Static for now; can move to a DB later keeping the index as ID |
+| `lib/storage.ts` | Safe localStorage/sessionStorage wrappers (never throw) |
+| `lib/quizLink.ts` | Encodes `{n: name, a: [[questionIdx, answerIdx], …]}` as base64url in the URL **hash** (`/play/#…`). UTF-8 safe (Hindi and emoji tested). Light obfuscation, not security. Decoder cleans input: name max 24 chars, max 30 pairs, drops duplicates and bad pairs |
 | `app/layout.tsx` | Site-wide metadata ("Free Games for Couples") and Open Graph tags |
 | `README.md` | Run, build and deploy steps |
 
@@ -77,7 +80,7 @@ Key facts:
 ---
 
 ## 6. Next steps
-1. Confirm the Vercel deploy of commit `1908ed3` succeeds; test the full flow on two phones using the vercel.app URL.
+1. Test the new create/play flows on two real phones (WhatsApp in-app browser, Instagram in-app browser, Chrome, Safari).
 2. Buy kissandquiz.com (plus kissnquiz.com as a redirect), connect it in Vercel; reserve the `kissandquiz` handle on Instagram, YouTube and X.
 3. Add a share image (Open Graph) so WhatsApp and Instagram links show a nice preview card.
 4. Add a Hindi/Hinglish question pack and an option to choose the language.
@@ -88,6 +91,19 @@ Key facts:
 ---
 
 ## 7. Progress log
+### 2026-11-17 (session 4)
+- Audited game 1 end to end and fixed everything found:
+  - Create: added Back/Next, 🔄 swap question, review screen with tap-to-edit and change name, saved draft across refresh, native share button (Instagram/Telegram), "Edit answers" and "New quiz" on the share screen, progress bar now reaches 100%.
+  - Play: replaced the 0.9s auto-jump with explicit Next/Back; one guess per question, locked after reveal; shows "{name}'s answer" and "{name} picked X"; results page has "See all answers" review, native share and "Play again"; refresh resumes; pasting a new link in the same tab loads it; `{name}` replaced everywhere.
+  - Links: stricter decoding (name cap, dedupe, invalid pairs dropped); pluralisation fix.
+  - SEO/share: `/play/` has its own share title and is `noindex`; `/create/` has its own title.
+- Question bank: researched popular "how well do you know me" lists (The Knot, Paired, Bonobology, Marriage.com, AhaSlides, MyHeartCraft). Common themes: favourites, habits, personality, love, childhood, future, funny what-ifs. Wrote **61 new multiple-choice questions** (indexes 20–80), India-flavoured but global. Added a `category` to every question.
+- Decision: retired 3 old questions instead of deleting them (old links still work): #2 favourite food (too few options; replaced by #20 cuisine and #29 comfort meal), #9 emoji (creator and partner were asked different things; replaced by #39), #14 who says sorry first ("Me/You" flips meaning for the partner). Rule added: every question must be about the creator only, no "me/you" options.
+- Decision: keep questions static in code for now. If we add a database later, the array index stays the question ID.
+- Verified: the 20 old questions are unchanged; 2,000 random picks were valid; browser test of both flows on mobile, old-format links with retired questions, tampered and broken links — no console errors. Pushed as `7c8f515`.
+- Idea for later: let creators write one custom question of their own (e.g. "Where did we first meet?"), which needs the free-text answer stored in the link.
+- Next: test on real phones, buy the domain, add the share image.
+
 ### 2026-11-17 (session 3)
 - First Vercel deploy is live.
 - Decision (Raj): KissAndQuiz is a **store of many couple games**, not one quiz. Home page redesigned as a game store: responsive card grid (1/2/3 columns), "Play now" section (game 1) and "Coming soon" section (Would You Still Love Me If…, Couple Ludo with Dares, Truth or Dare, Deep Questions Deck, Date Night Scratch-off, Daily Couple Question).
