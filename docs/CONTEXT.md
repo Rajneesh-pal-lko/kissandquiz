@@ -145,10 +145,31 @@ Rule: **distribution is now the bottleneck, not code.** No new big features (no 
 | Jan 13–Feb 6 | Valentine Week hub: one small tool/card per day (Rose → Valentine's), reusing existing pieces. Truth or Dare (mild/medium default, spicy opt-in, noindex) only if time | Product Hunt launch late Jan; daily posts from Feb 1 |
 | Feb 7–14 | Bug fixes only | Post daily (one per Valentine Week day) |
 | Feb 15 | **Review:** share rate, partner completion, % partners who make their own quiz, week-2 return. Then pick: daily question + streaks (retention bet) vs. India games (Ludo/Antakshari) | |
-Money decision: stay on Vercel Hobby with **no ads** through Valentine's. After Feb 15, if traffic is real, choose Vercel Pro ($20/mo) or move to Cloudflare Workers (OpenNext) before any ads/affiliate/payments.
+Money decision: stay on Vercel Hobby with **no ads** through Valentine's. After Feb 15, if traffic is real, choose Vercel Pro ($20/mo) or move to Cloudflare Workers (OpenNext) before any ads/affiliate/payments. *(Partly superseded by session 7: Raj wants paid features, so payments may come before Feb 15; still no AdSense.)*
+
+### Monetisation plan (proposed 2026-11-18, session 7; waiting for Raj's decisions)
+Raj clarified his original goal: **not AdSense**. Reach a big crowd (India first, global too) and sell cheap premium features worth "10x the price", including 18+ couple games (truth or dare, spicy scratch cards, sex-position games, a daily question for both partners). He also floated a premium-only, limited launch tested with paid ads.
+Full research: **Claude Doc "KissAndQuiz — How to Make Money (Premium + 18+ Research)"** https://claude.ai/artifact/Xfw312fPBtk7VhUKrgykPx
+Key findings:
+- **What sells:** double-blind yes/maybe/no matching where only shared yeses are revealed (Spicer ~$4.99/mo or $39.99/yr, ~$10K/mo est.; Kindu; Secret Desires $24.99 lifetime; Tease $5.99/mo). Competitors need two app installs and often charge per phone. Our edge: one link, no install, **one payment covers both partners**.
+- **Spicy-only apps are small earners** (Desire: ~46.6K installs, under $10K/mo est., 73% ads). Paired (broad relationship ritual) earns far more.
+- **18+ line: "spicy, not explicit".** Explicit sex content (sex-position illustrations, graphic acts, nudity) is blocked by Stripe, Lemon Squeezy, Paddle and Indian gateways (Zoho Payments bans "sexually suggestive materials (including literature)"; Razorpay terms not checked yet), by Vercel's AUP ("obscene"), by Meta ads (no ads discussing sexual practices) and by AdSense, and it carries Indian law risk (IT Act 67/67A; 25 OTT apps blocked in 2025, 5 more in Feb 2026; draft 2026 rules add an "Adult-only" rating with age verification). Adult processors (CCBill ~10.8–14.5%, reserves, cards only, no UPI) are poor for India. Apple/Google allow 17+ spicy text apps (Spicer, Desire) but take 15–30% and need an install.
+- **Google SafeSearch:** explicit pages should sit on a separate domain/subdomain, or the whole site may be filtered.
+- **Minors:** DPDP Rules notified Nov 2025; verifiable parental consent for under-18s; most duties from 14 May 2027. Use an 18+ gate.
+- **Pricing:** India prefers one-time payments (Razorpay: a one-off ₹499 feels easier than ₹99/month). UPI AutoPay renews up to ₹15,000 without OTP. RevenueCat 2026: hard paywall 10.7% vs freemium 2.1% day-35 conversion; India/SEA 1.4%; year-1 value per payer $14 in India/SEA vs $32 in North America.
+- **Premium-only vs freemium:** a paywall before the partner joins kills the viral loop. Fake scarcity backfires for unknown brands; real scarcity (founders' price) is fine.
+- **Paid ads test:** Instagram Reels in India costs about ₹45–140 per 1,000 views and ₹4–55 per click. Use a real pre-order, not "notify me".
+Proposed (for Raj to decide):
+1. **Model B:** free first game + one-time **Couple Pass** that unlocks premium for both partners (not premium-only).
+2. **Flagship paid feature: Spicy Match** (text-only yes/maybe/no, Mild level free, Hot levels paid) on an 18+ subdomain, noindex, no ads. **Don't build an illustrated sex-position game.**
+3. Prices to test: single pack ₹49/$1.99; Couple Pass 1 year ₹199/$14.99; lifetime ₹399/$29; **founders' offer: first 500 at ₹99/$4.99 lifetime**.
+4. Before charging: buy domain → written gateway approval (Razorpay/Cashfree) with 10 sample cards → one IT/cyber lawyer consult → move off Vercel Hobby (Pro $20/mo or Cloudflare).
+5. ₹10,000 Instagram Reels pre-order test in mid-January with PG-13 ad creatives; pass = 1.5%+ of visitors pay, 30%+ partner completion.
 
 ## 6. Next steps
-**Session 6 (proposed, priority order):** 1) buy kissandquiz.com + handles, 2) real-phone test, 3) funnel tracking (`fromQuiz`) + Search Console, 4) score-card image, 5) start Shorts/Reels in December, 6) Love Calculator/FLAMES + early `/valentine-week/` page, 7) Game 2, 8) Valentine Week hub, 9) Feb 15 review. Items below are the older list (still valid; step 5 MongoDB is done, see session 4).
+**Session 7 (proposed, priority order; replaces the session 6 order once Raj approves):** 0) Raj decides: Model B, "spicy not explicit", founders' price, hosting (Vercel Pro vs Cloudflare). 1) Buy kissandquiz.com (gateways need a live site with terms, refund policy, contact). 2) Email Razorpay + Cashfree 10 sample Spicy Match cards; get written approval; one lawyer consult. 3) Build Spicy Match (Mild free + one paid Hot level) on the existing link + MongoDB, 18+ subdomain. 4) Checkout (UPI + cards) + Couple Pass unlock for both partners + simple funnel tracking (paused by Raj for now; needed before the ads test). 5) Mid-Jan ₹10,000 ads pre-order test. 6) Feb 7–14 Valentine push with founders' offer. 7) Feb 15 review; if people pay, add Scratch-off dates and Truth or Dare Spicy.
+
+**Session 6 (proposed, priority order; partly superseded by session 7, funnel tracking paused by Raj):** 1) buy kissandquiz.com + handles, 2) real-phone test, 3) funnel tracking (`fromQuiz`) + Search Console, 4) score-card image, 5) start Shorts/Reels in December, 6) Love Calculator/FLAMES + early `/valentine-week/` page, 7) Game 2, 8) Valentine Week hub, 9) Feb 15 review. Items below are the older list (still valid; step 5 MongoDB is done, see session 4).
 
 Proposed order after Research 2:
 1. Test the current flows on two real phones (WhatsApp and Instagram in-app browsers, Chrome, Safari).
@@ -167,6 +188,13 @@ Proposed order after Research 2:
 ---
 
 ## 7. Progress log
+### 2026-11-18 (session 7) — Monetisation and 18+ research
+- Raj: hold off on funnel tracking. Clarified the original goal: big crowd (India + global) and cheap paid premium features, including 18+ couple games (truth or dare, spicy scratch cards, sex-position games, a daily question for both partners), not AdSense. Asked whether to launch premium-only/limited and test with paid ads.
+- Deep research written to the Claude Doc "KissAndQuiz — How to Make Money (Premium + 18+ Research)": https://claude.ai/artifact/Xfw312fPBtk7VhUKrgykPx (competitor prices, pricing in India, payment gateway / law / ads / hosting rules for 18+, premium-only vs freemium, ads test plan, free vs premium feature map, risks). Summary in section 5 "Monetisation plan".
+- Proposed: Model B (free first game + one-time Couple Pass covering both partners); flagship paid feature Spicy Match (text only); "spicy, not explicit" (no illustrated sex-position game); founders' price; ₹10K Reels pre-order test in mid-January. Waiting for Raj's decisions.
+- No code changed.
+- Next: Raj decides; buy domain; gateway approval with sample cards.
+
 ### 2026-11-18 (session 6) — Strategy review vs. original PDF
 - Raj shared the founding "AI Couple Games — Brand Strategy" PDF and asked how to proceed. Compared it with what's built (table in section 4) and re-checked the web: Vercel Hobby terms, OpenNext on Cloudflare, AdSense content rules and new-site rejections, current couple trends, Valentine Week 2027 dates.
 - Findings: code is ahead of the PDF's plan; domain, analytics and content/distribution are behind. We can't run the PDF's pass/fail test (30% send, 10% return) without tracking.
