@@ -223,6 +223,15 @@ Proposed order after Research 2:
 ---
 
 ## 7. Progress log
+### 2026-11-18 (session 13) — ChatGPT deep-research report reviewed
+- Raj ran a ChatGPT deep-research prompt (written by Claude) and shared the report. Claude cross-checked the key claims.
+- Report's main change: **replace Love Language Test with Most Likely To** in batch 1 (Love Language is a one-time assessment with no winner; Most Likely To is couple-native, replayable, scoreable). Claude agrees. Love Language → batch 2.
+- Proposed batch 1 (final, waiting for Raj's OK): Free — How Well Do You Know Me (live), Would You Rather, Most Likely To, Truth or Dare (Mild), Never Have I Ever. Spicy — Spicy Truth or Dare, Naughty Never Have I Ever (a deck on the NHIE engine), Yes / No / Maybe.
+- Adopted ideas from the report: "Prediction" twist across games (answer for yourself + guess your partner, points for correct guesses → gives every game a winner for the future Kiss Wallet); Yes/No/Maybe privacy enforced in the backend (the API never sends a partner's "No"); short games with a fixed number of rounds; track game start → link shared → partner joined → both finished → repeat → purchase.
+- Verified: Paired's FAQ says Premium is $79.99 per couple per year (App Store also shows $39.99 and other prices). **Kulfi** (Indian, WooshAuto) is a couples-only app with Never Have I Ever, Who's More Likely To, Would You Rather — "answer privately, then reveal together". Foreplay (Couples Games): 13–15 games, US lifetime $34.99. Other apps already use partner prediction (Doodi, Twosome Quiz). **Could not verify "Jodi Reveal"** (Hinglish wedding quiz with invite links) — treat as unconfirmed.
+- Implication: neither the games nor the private-reveal mechanic is unique. **Our edge = no install, no login, one WhatsApp link, India/Hinglish flavour, one payment for both partners.** Speed and reliability of joining matter most.
+- Build order proposed: Would You Rather (private reveal + prediction) → Most Likely To → Never Have I Ever → Truth or Dare (deck) → upgrade How Well Do You Know Me to two-way prediction.
+
 ### 2026-11-18 (session 12) — Drop Love Calculator + FLAMES?
 - Raj: Love Calculator and FLAMES feel "noob" and look like crush tools, not couple games. Asked to validate.
 - Research: FLAMES apps describe it as a game for "teens and pre-teens who are beginning to explore the world of crushes"; love calculator apps/sites are almost all marketed as "you and your crush", audience incl. teenagers. 5lovelanguages.com: "love language test" 60.5K and "love language quiz" 27.1K US searches/month (Semrush, Oct 2026), ~1.1M visits in Oct 2026, 74% US traffic; they sell a premium report.
