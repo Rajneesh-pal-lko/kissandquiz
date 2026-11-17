@@ -146,7 +146,7 @@ Proposed order after Research 2:
 - Merged the redesign with session 3's account feature (account/verify/privacy pages restyled; results page keeps the signed-in quiz list; share screen keeps "save it to a free account").
 - `metadataBase` now reads `SITE_URL` so share images get absolute URLs.
 - Tested: production build passes; full flow on 390 px and 360 px phones (create → short link → partner plays → score → creator results), long-link fallback, Hindi name, broken/expired links, account sign-in with dev link, privacy page. No console errors except the expected 401 from `/api/me/` when signed out. Not yet checked on real phones or inside WhatsApp/Instagram in-app browsers.
-- Raj reviewed the preview and approved. **Merged `redesign-v2` → `main`** (fast-forward). Preview showed "Accounts are coming soon" because Vercel's `MONGODB_URI`/Resend env vars are set for Production only; on production the account page works.
+- Raj reviewed the preview and approved. **Merged `redesign-v2` → `main`** (fast-forward). Raj saw no working account on the preview, most likely because Vercel's `MONGODB_URI`/Resend env vars are set for Production only (the preview then shows "Accounts are coming soon"). Production deploy of `1a3ab1a` reported success; Raj to confirm the account page works there.
 - Decision (home page, for later): keep the single featured game while there is one. Once 3+ games are live: general hero + featured button picked from real play data + "Trending" row; special takeover for Valentine's Week. Needs analytics first.
 - Next: test on real phones (WhatsApp/Instagram in-app browsers); then score-card image, analytics, Love Calculator/FLAMES.
 
