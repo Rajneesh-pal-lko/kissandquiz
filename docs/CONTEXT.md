@@ -223,6 +223,10 @@ Proposed order after Research 2:
 ---
 
 ## 7. Progress log
+### 2026-11-18 (session 11) — Next game
+- Raj: Kiss Wallet on hold until earning rules are decided (rules discussion still to do). Asked which game to build next.
+- Recommendation: **Love Calculator + FLAMES first** (largest India demand, smallest build, needs Google indexing time before Feb, funnels into game 1), then **Would You Rather** (builds the private-reveal engine reused by Never Have I Ever and Yes/No/Maybe). Waiting for Raj's OK.
+
 ### 2026-11-18 (session 10) — Kiss Wallet idea rated
 - Raj: couple wallet where the winner earns kisses from the partner, kisses can be bet, paid tier adds other (sexual) rewards. Asked for a research-based rating.
 - Research: communal vs exchange relationships (Clark & Mills), overjustification (Deci, Koestner & Ryan 1999), self-expansion (Aron et al. 2000), approach/avoidance sexual motives (Impett et al.), adult playfulness (Proyer), Love Bank (Harley), precedents (Kahnoodle, Kyupid, love-coupon apps), India Online Gaming Act 2025.
