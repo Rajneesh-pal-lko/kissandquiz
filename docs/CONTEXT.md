@@ -29,7 +29,7 @@ To verify still: domain purchase, Instagram/YouTube/X handles (`kissandquiz`), t
 
 ## 3. Code and hosting
 - **Repo:** https://github.com/Rajneesh-pal-lko/kissandquiz (branch `main`). Claude has push access via the Claude GitHub App.
-- **Stack:** Next.js 15 (App Router, pinned 15.5.29) + React 19 (19.2.9) + TypeScript, **static export** (`output: "export"`), plain CSS (`app/globals.css`), no backend, no database.
+- **Stack:** Next.js 15 (App Router, pinned 15.5.29) + React 19 (19.2.9) + TypeScript, **plain CSS (`app/globals.css`). **Backend since 2026-11-18:** Next.js API routes on Vercel + **MongoDB Atlas Free** (`MONGODB_URI` env var in Vercel; never commit it). Static export was removed (superseded: needed for API routes); pages are still pre-rendered where possible.
 - **Hosting plan:** Vercel (free), with the custom domain kissandquiz.com. Raj already hosts happynewyear2027.in on Vercel (domain from GoDaddy).
 - **Commands:** `npm install`, `npm run dev` (localhost:3000), `npm run build` (output in `./out`).
 
@@ -41,9 +41,16 @@ To verify still: domain purchase, Instagram/YouTube/X handles (`kissandquiz`), t
 | `app/games/how-well-do-you-know-me/page.tsx` | Game 1 intro page (old home content) with its own SEO title, links to `/create/` |
 | `app/create/page.tsx` | Creator flow: name → 10 questions (Back/Next, auto-advance on tap, 🔄 swap question) → review screen (tap to edit, change name) → share (WhatsApp, native share, copy, edit answers, new quiz). Draft saved in localStorage (`kq.create.v1`) so refresh doesn't lose work |
 | `app/create/layout.tsx` | Share/SEO metadata for `/create/` |
-| `app/play/page.tsx` | Partner flow: intro → guess each question (one guess, locked after reveal, shows creator's answer) with Back/Next → score + verdict → "See all answers" review, send score on WhatsApp / native share, play again, make own quiz. Progress saved in sessionStorage per link; reloads on hash change |
+| `app/play/page.tsx` | Old long links `/play/#…` (kept forever; no results saved). Uses `PlayGame`. Partner flow: intro → guess each question (one guess, locked after reveal, shows creator's answer) with Back/Next → score + verdict → "See all answers" review, send score on WhatsApp / native share, play again, make own quiz. Progress saved in sessionStorage per link; reloads on hash change |
 | `app/play/layout.tsx` | Share preview title "How well do you know me? 💘"; `noindex` (quiz links are personal) |
 | `lib/questions.ts` | **81 questions (78 active)** in 7 categories (favourites, habits, personality, love, past, future, funny), 4–6 options each. Index = stable ID. **Only append; never reorder or delete questions or options.** Use `retired: true` to stop picking a question (old links still decode). Picker takes max 2 per category. Static for now; can move to a DB later keeping the index as ID |
+| `lib/store.ts` | Server-only data layer: MongoDB (cached client, TTL indexes, 180-day auto-delete) or in-memory store in local dev. Collections `quizzes` `{_id: 8-char id, n, a, ownerHash, createdAt}` and `results` `{quizId, partner, guesses, score, total, createdAt}` |
+| `lib/quizRules.ts` | Shared validation (name, pairs, guesses, score) for browser and API |
+| `app/api/quiz/…` | `POST /api/quiz/` create → `{id, token}`; `GET /api/quiz/<id>/`; `POST /api/quiz/<id>/result/` (score computed server-side, max 10 per quiz); `GET /api/quiz/<id>/results/` with header `x-owner-token` (creator only) |
+| `app/q/[id]/` | Short quiz link, server-rendered so WhatsApp preview says "How well do you know <name>? 💘"; noindex. Partner can enter their name; result saved once (replays not saved) |
+| `app/results/` | Creator's results page (partner's score + every answer). Quizzes listed from this phone's localStorage (`kq.myquizzes.v1`) or a private link `/results/?id=<id>#<token>` |
+| `components/PlayGame.tsx` | The partner game, shared by `/play/#…` (old links) and `/q/<id>/` |
+| `lib/myQuizzes.ts` | Creator's quiz list + secret tokens in localStorage |
 | `lib/storage.ts` | Safe localStorage/sessionStorage wrappers (never throw) |
 | `lib/quizLink.ts` | Encodes `{n: name, a: [[questionIdx, answerIdx], …]}` as base64url in the URL **hash** (`/play/#…`). UTF-8 safe (Hindi and emoji tested). Light obfuscation, not security. Decoder cleans input: name max 24 chars, max 30 pairs, drops duplicates and bad pairs |
 | `app/layout.tsx` | Site-wide metadata ("Free Games for Couples") and Open Graph tags |
@@ -100,7 +107,7 @@ Proposed order after Research 2:
 2. Buy kissandquiz.com (+ kissnquiz.com redirect); reserve the `kissandquiz` handles.
 3. Hosting: **stay on Vercel Hobby for now** (decided 2026-11-17). Before turning on ads, affiliate links or payments, either upgrade to Vercel Pro or move to Cloudflare Pages. Keep code portable (no Vercel-only features) so a move stays cheap.
 4. Default share image (OG, 1200×630, under 300 KB) + **score-card image** the partner can share.
-5. Backend (proposed 2026-11-18, waiting for Raj's go-ahead): **Next.js API routes on Vercel + MongoDB Atlas Free** for short links `/q/<id>`, a "who took my quiz" results page for the creator (partner only, no leaderboard), and personalised link previews. Needs removing `output: "export"`. Mongo notes: cache the client between calls; Atlas must allow 0.0.0.0/0 (Vercel IPs are dynamic) so use a strong DB password; Free cluster pauses after 30 days with zero connections; TTL index to auto-delete old quizzes. Old `/play/#…` links must keep working.
+5. **Raj: connect MongoDB** — add `MONGODB_URI` in Vercel env vars, allow `0.0.0.0/0` in Atlas Network Access, redeploy, test create → partner plays → results on two phones. Then **change the Atlas DB password** (it was shared in chat) and update the Vercel variable. Until then the site falls back to long links.
 6. Free analytics (Cloudflare Web Analytics): share rate, partner completion, partners who make their own quiz.
 7. Love Calculator + FLAMES (Hinglish, shareable result, funnels into game 1). India SEO magnet.
 8. Game 2: "Would You Still Love Me If…".
@@ -111,6 +118,13 @@ Proposed order after Research 2:
 ---
 
 ## 7. Progress log
+### 2026-11-18 (session 2)
+- Built the backend (commit `dc813a3`): short links `/q/<id>/`, creator results page `/results/`, personal WhatsApp preview, partner name (optional), server-side scoring, max 10 results per quiz, 180-day auto-delete, creator secret token (only hash stored). Old `/play/#…` links unchanged; create falls back to them if the API is unavailable.
+- Decision: MongoDB Atlas Free + Next.js API routes on Vercel. Static export removed (superseded the "no backend / static export" decision because creator results need a database).
+- Tested locally with the in-memory store: full create → play → results flow, private results link on another device, wrong token, tampered input, replay not double-saved, legacy links, expired/broken links, production fallback when DB is missing. No console errors. Could not test against the real Atlas cluster from the sandbox (network blocked).
+- Security: Raj shared the DB password in chat; it is not stored in the repo, context or memory. Raj to rotate it after setup.
+- Next: Raj sets `MONGODB_URI` in Vercel and tests on phones; then OG/score-card images.
+
 ### 2026-11-18
 - Decision (Raj): **partner only** plays a quiz. No friends leaderboard. (Supersedes the "let friends play" option in Research 2, gap 6.) Mirror mode stays on the later list.
 - Raj asked about backend platform and MongoDB. Recommendation: keep backend on Vercel (Next.js API routes), MongoDB Atlas Free is fine for this data. Waiting for go-ahead.
