@@ -95,12 +95,12 @@ Key facts:
 ---
 
 ## 6. Next steps
-Proposed order after Research 2 (backend decision still open):
+Proposed order after Research 2:
 1. Test the current flows on two real phones (WhatsApp and Instagram in-app browsers, Chrome, Safari).
 2. Buy kissandquiz.com (+ kissnquiz.com redirect); reserve the `kissandquiz` handles.
 3. Hosting: **stay on Vercel Hobby for now** (decided 2026-11-17). Before turning on ads, affiliate links or payments, either upgrade to Vercel Pro or move to Cloudflare Pages. Keep code portable (no Vercel-only features) so a move stays cheap.
 4. Default share image (OG, 1200×630, under 300 KB) + **score-card image** the partner can share.
-5. **Decide:** add a small backend (Cloudflare Pages Functions + D1) for short links `/q/<id>`, a "who took my quiz" results page for the creator, and personalised link previews. Old `/play/#…` links must keep working.
+5. Backend (proposed 2026-11-18, waiting for Raj's go-ahead): **Next.js API routes on Vercel + MongoDB Atlas Free** for short links `/q/<id>`, a "who took my quiz" results page for the creator (partner only, no leaderboard), and personalised link previews. Needs removing `output: "export"`. Mongo notes: cache the client between calls; Atlas must allow 0.0.0.0/0 (Vercel IPs are dynamic) so use a strong DB password; Free cluster pauses after 30 days with zero connections; TTL index to auto-delete old quizzes. Old `/play/#…` links must keep working.
 6. Free analytics (Cloudflare Web Analytics): share rate, partner completion, partners who make their own quiz.
 7. Love Calculator + FLAMES (Hinglish, shareable result, funnels into game 1). India SEO magnet.
 8. Game 2: "Would You Still Love Me If…".
@@ -111,6 +111,11 @@ Proposed order after Research 2 (backend decision still open):
 ---
 
 ## 7. Progress log
+### 2026-11-18
+- Decision (Raj): **partner only** plays a quiz. No friends leaderboard. (Supersedes the "let friends play" option in Research 2, gap 6.) Mirror mode stays on the later list.
+- Raj asked about backend platform and MongoDB. Recommendation: keep backend on Vercel (Next.js API routes), MongoDB Atlas Free is fine for this data. Waiting for go-ahead.
+- Next: on go-ahead, build short links + creator results page.
+
 ### 2026-11-17 (session 5)
 - Deep research: how quiz-by-link games are designed (BuddyMeter-style friendship quiz sites, couple quiz tools, Paired), what couples search for, AI Overview impact, India ad RPM, hosting terms, DPDP Act. Findings in section 4 → "Research 2".
 - Verdict: game 1's core loop is right; biggest gaps are creator-side results, score-card image, personalised/short links, custom questions, one taker per link.
