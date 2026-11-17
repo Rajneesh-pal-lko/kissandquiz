@@ -178,6 +178,13 @@ Verdict (Claude): **right direction, but launch in waves, not all 20 at once.**
 - **Build 20 games on ~5 shared engines** (content changes, code doesn't): A) quiz-and-guess (exists), B) card deck with levels, C) private match (both answer, reveal), D) random generator (calculator / wheel / dice / scratch), E) board (Ludo).
 Free 10: How Well Do You Know Me (A, live) · Love Calculator + FLAMES (D) · Truth or Dare Mild, Hinglish (B) · Never Have I Ever (B) · Would You Rather / This or That (C) · Who's More Likely To (C) · Would You Still Love Me If… (B/C) · Couple Ludo with Dares (E) · Antakshari for Two (B) · Shaadi Shoe Game / Who Knows the Couple Best (C).
 Spicy 10 (18+ subdomain, text + hint art): Spicy Match yes/maybe/no (C, flagship) · Spicy Truth or Dare (B) · Naughty Never Have I Ever (B) · Spicy Would You Rather (C) · Dare Dice (D) · Spicy Scratch Cards (D) · Hot Seat Rapid Fire (B) · Spicy Ludo (E) · Fantasy Builder (C) · 7-Day Spicy Challenge (B, daily unlock, Valentine's Week). Later: position-silhouette deck after gateway approval.
+**Batch 1 decision (Raj, 2026-11-18, session 9): only well-known, established games, no brand-new formats yet.** People should instantly know what the site is for; original games come later once there's data and a design. Claude agrees, with one rule: keep the famous name and familiar rules, and add **one KissAndQuiz twist** per game (the "Most Advanced Yet Acceptable" principle: people prefer novelty as long as the product stays typical). Use the exact known name in titles/URLs (e.g. "Truth or Dare for Couples"), not invented brand names.
+Evidence (Semrush): India "love calculator" 368K/month, "love calculator name" 450K, "calculator love" 201K (Oct 2026); India "flames" 110K, "flames calculator" 90.5K, "flames game" 22.2K. US "truth or dare questions" 74K, "never have I ever questions" 74K, "would you rather" ~60–74K. These spaces are crowded (truthordarequiz.com 5,000+ questions, lovebae.app with heat levels, luvsita.com Hinglish truth and dare), so the twist is required.
+Batch 1 lineup (proposed):
+- Free: 1) How Well Do You Know Me (live; twist: partner plays over a link, creator sees results) · 2) Love Calculator + FLAMES (twist: Hinglish result card, then "prove it" → quiz) · 3) Truth or Dare for Couples, Mild, Hinglish (twist: send a truth/dare to your partner over WhatsApp) · 4) Never Have I Ever for Couples (twist: both answer privately on their own phones, side-by-side reveal) · 5) Would You Rather for Couples (twist: both pick privately, match score at the end).
+- Spicy (18+ subdomain): 1) Spicy Truth or Dare (Hot levels) · 2) Naughty Never Have I Ever · 3) Yes / No / Maybe — Couples Edition (the established sex-therapy checklist; only shared yeses revealed; this is the "Spicy Match" paid mechanic, renamed to its known name).
+- Needs 4 engines: quiz (done), card deck, private reveal, calculator. Moved to batch 2: Couple Ludo (board engine), Antakshari, Who's More Likely, Would You Still Love Me If, Shoe Game, spicy dice/scratch/hot seat.
+
 Waves: **Wave 1 by Feb 7, 2027:** free 5 (HWDYKM, Love Calc+FLAMES, Truth or Dare Mild, Never Have I Ever, Would You Rather) + spicy 3 (Spicy Match, Spicy ToD, Naughty NHIE) — uses engines A, B, C, D only. **Wave 2 (Mar–Apr):** Ludo + Spicy Ludo, Antakshari, Who's More Likely, Would You Still Love Me If, Shoe Game, Dare Dice, Scratch Cards, Hot Seat, Fantasy Builder, 7-Day Challenge. Add a game only when the previous one is good.
 
 ## 6. Next steps
@@ -202,6 +209,12 @@ Proposed order after Research 2:
 ---
 
 ## 7. Progress log
+### 2026-11-18 (session 9) — Batch 1: known games only?
+- Raj: batch 1 (5 free + 3 spicy) should be the most popular, already-known games, not new ones, so visitors know why they came.
+- Research: Semrush search volumes (India love calculator / FLAMES; US truth or dare, never have I ever, would you rather), MAYA principle (Hekkert et al. 2003), yes/no/maybe list as an established sex-therapy tool, crowded truth-or-dare sites incl. Hinglish ones.
+- Decision (Raj): batch 1 = known games only. Proposed lineup + one twist per game in section 5. Waiting for Raj to confirm the exact 8.
+- No code changed.
+
 ### 2026-11-18 (session 8) — How many games?
 - Raj asked: many games, or the 10 best Indian couple games free + 10 best spicy (free first, later Couple Pass)? Asked to ignore payment/legal for this question.
 - Research: choice-overload meta-analysis (mixed, ~zero average effect), Jackbox pack design (5 per pack, separate 3-game Naughty Pack, "Party Starter" for where-to-start), competitor connectedcouples.app (10 free browser couple games), Google scaled content abuse, Indian wedding/couple games (Antakshari, ring-in-milk, joota chupai, shoe game), Paired complaints about features moving behind paywall.
