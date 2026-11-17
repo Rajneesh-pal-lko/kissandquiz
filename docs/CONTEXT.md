@@ -95,10 +95,10 @@ Key facts:
 ---
 
 ## 6. Next steps
-Proposed order after Research 2 (waiting for Raj to confirm the hosting + backend decisions):
+Proposed order after Research 2 (backend decision still open):
 1. Test the current flows on two real phones (WhatsApp and Instagram in-app browsers, Chrome, Safari).
 2. Buy kissandquiz.com (+ kissnquiz.com redirect); reserve the `kissandquiz` handles.
-3. **Decide:** move hosting from Vercel Hobby to Cloudflare Pages (free, commercial use allowed). Recommended before any ads/affiliate.
+3. Hosting: **stay on Vercel Hobby for now** (decided 2026-11-17). Before turning on ads, affiliate links or payments, either upgrade to Vercel Pro or move to Cloudflare Pages. Keep code portable (no Vercel-only features) so a move stays cheap.
 4. Default share image (OG, 1200×630, under 300 KB) + **score-card image** the partner can share.
 5. **Decide:** add a small backend (Cloudflare Pages Functions + D1) for short links `/q/<id>`, a "who took my quiz" results page for the creator, and personalised link previews. Old `/play/#…` links must keep working.
 6. Free analytics (Cloudflare Web Analytics): share rate, partner completion, partners who make their own quiz.
@@ -117,6 +117,7 @@ Proposed order after Research 2 (waiting for Raj to confirm the hosting + backen
 - Platform direction (proposed): interactive tools and games, not article lists; India hooks (Love Calculator/FLAMES, Valentine Week, Hinglish).
 - Flagged risk: Vercel Hobby forbids commercial use; Cloudflare Pages recommended.
 - Pending decisions for Raj: (1) move to Cloudflare Pages, (2) add a small backend for short links + creator results, (3) partner-only vs. friends-can-play leaderboard.
+- Decision (Raj, same day): **stay on Vercel** for now; buy Vercel Pro later if needed. Fine while the site makes no money. Revisit before any ads/affiliate/payments. Decision (1) closed; (2) and (3) still open.
 - Next: Raj decides; then OG + score-card image, then backend.
 
 ### 2026-11-17 (session 4)
