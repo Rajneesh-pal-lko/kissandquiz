@@ -167,6 +167,19 @@ Proposed (for Raj to decide):
 4. Before charging: buy domain → written gateway approval (Razorpay/Cashfree) with 10 sample cards → one IT/cyber lawyer consult → move off Vercel Hobby (Pro $20/mo or Cloudflare).
 5. ₹10,000 Instagram Reels pre-order test in mid-January with PG-13 ad creatives; pass = 1.5%+ of visitors pay, 30%+ partner completion.
 
+### Game lineup: 10 free + 10 spicy (proposed 2026-11-18, session 8; waiting for Raj's OK)
+Raj's idea: no "bombarding" with many games; instead the 10 best Indian couple games free + 10 best spicy ones (18+ subdomain), free at first and later behind the Couple Pass.
+Verdict (Claude): **right direction, but launch in waves, not all 20 at once.**
+- Choice overload is not the issue (a 2010 meta-analysis of 50 experiments found an average effect of about zero); **presentation** is. Jackbox ships packs of ~5 games and still had to build a "Party Starter" because players asked where to start. So: one featured game + mood groups.
+- Precedent for a separate spicy set: Jackbox released a smaller 3-game "Naughty Pack" (2024).
+- Competitor: connectedcouples.app already has **10 free browser couple games, no account** (Never Have I Ever, Would You Rather, This or That, Most Likely To, Truth or Dare, How Well Do You Know Me, 21 Questions, Two Truths and a Lie, 5 Second Rule, Date Night Roulette). "10 free games" alone is not our edge; **India (Hinglish, Ludo, Antakshari, FLAMES, shaadi games) + partner-over-link + spicy zone** is.
+- Google's scaled content abuse policy targets many low-value pages; 20 real games with useful pages are fine, 100 thin template pages are not.
+- "Free now, paid later" risk: Paired reviews complain features moved behind the paywall. So keep Mild levels free forever, and label spicy Hot levels "free for launch week" from day one.
+- **Build 20 games on ~5 shared engines** (content changes, code doesn't): A) quiz-and-guess (exists), B) card deck with levels, C) private match (both answer, reveal), D) random generator (calculator / wheel / dice / scratch), E) board (Ludo).
+Free 10: How Well Do You Know Me (A, live) · Love Calculator + FLAMES (D) · Truth or Dare Mild, Hinglish (B) · Never Have I Ever (B) · Would You Rather / This or That (C) · Who's More Likely To (C) · Would You Still Love Me If… (B/C) · Couple Ludo with Dares (E) · Antakshari for Two (B) · Shaadi Shoe Game / Who Knows the Couple Best (C).
+Spicy 10 (18+ subdomain, text + hint art): Spicy Match yes/maybe/no (C, flagship) · Spicy Truth or Dare (B) · Naughty Never Have I Ever (B) · Spicy Would You Rather (C) · Dare Dice (D) · Spicy Scratch Cards (D) · Hot Seat Rapid Fire (B) · Spicy Ludo (E) · Fantasy Builder (C) · 7-Day Spicy Challenge (B, daily unlock, Valentine's Week). Later: position-silhouette deck after gateway approval.
+Waves: **Wave 1 by Feb 7, 2027:** free 5 (HWDYKM, Love Calc+FLAMES, Truth or Dare Mild, Never Have I Ever, Would You Rather) + spicy 3 (Spicy Match, Spicy ToD, Naughty NHIE) — uses engines A, B, C, D only. **Wave 2 (Mar–Apr):** Ludo + Spicy Ludo, Antakshari, Who's More Likely, Would You Still Love Me If, Shoe Game, Dare Dice, Scratch Cards, Hot Seat, Fantasy Builder, 7-Day Challenge. Add a game only when the previous one is good.
+
 ## 6. Next steps
 **Session 7 (proposed, priority order; replaces the session 6 order once Raj approves):** 0) Raj decides: Model B, "spicy not explicit", founders' price, hosting (Vercel Pro vs Cloudflare). 1) Buy kissandquiz.com (gateways need a live site with terms, refund policy, contact). 2) Email Razorpay + Cashfree 10 sample Spicy Match cards; get written approval; one lawyer consult. 3) Build Spicy Match (Mild free + one paid Hot level) on the existing link + MongoDB, 18+ subdomain. 4) Checkout (UPI + cards) + Couple Pass unlock for both partners + simple funnel tracking (paused by Raj for now; needed before the ads test). 5) Mid-Jan ₹10,000 ads pre-order test. 6) Feb 7–14 Valentine push with founders' offer. 7) Feb 15 review; if people pay, add Scratch-off dates and Truth or Dare Spicy.
 
@@ -189,6 +202,12 @@ Proposed order after Research 2:
 ---
 
 ## 7. Progress log
+### 2026-11-18 (session 8) — How many games?
+- Raj asked: many games, or the 10 best Indian couple games free + 10 best spicy (free first, later Couple Pass)? Asked to ignore payment/legal for this question.
+- Research: choice-overload meta-analysis (mixed, ~zero average effect), Jackbox pack design (5 per pack, separate 3-game Naughty Pack, "Party Starter" for where-to-start), competitor connectedcouples.app (10 free browser couple games), Google scaled content abuse, Indian wedding/couple games (Antakshari, ring-in-milk, joota chupai, shoe game), Paired complaints about features moving behind paywall.
+- Proposed: 10 free + 10 spicy lineup built on ~5 shared engines, launched in two waves (5 free + 3 spicy by Feb 7). Details in section 5 "Game lineup". Waiting for Raj's OK.
+- No code changed.
+
 ### 2026-11-18 (session 7) — Monetisation and 18+ research
 - Raj: hold off on funnel tracking. Clarified the original goal: big crowd (India + global) and cheap paid premium features, including 18+ couple games (truth or dare, spicy scratch cards, sex-position games, a daily question for both partners), not AdSense. Asked whether to launch premium-only/limited and test with paid ads.
 - Deep research written to the Claude Doc "KissAndQuiz — How to Make Money (Premium + 18+ Research)": https://claude.ai/artifact/Xfw312fPBtk7VhUKrgykPx (competitor prices, pricing in India, payment gateway / law / ads / hosting rules for 18+, premium-only vs freemium, ads test plan, free vs premium feature map, risks). Summary in section 5 "Monetisation plan".
