@@ -159,6 +159,7 @@ Key findings:
 - **Pricing:** India prefers one-time payments (Razorpay: a one-off ₹499 feels easier than ₹99/month). UPI AutoPay renews up to ₹15,000 without OTP. RevenueCat 2026: hard paywall 10.7% vs freemium 2.1% day-35 conversion; India/SEA 1.4%; year-1 value per payer $14 in India/SEA vs $32 in North America.
 - **Premium-only vs freemium:** a paywall before the partner joins kills the viral loop. Fake scarcity backfires for unknown brands; real scarcity (founders' price) is fine.
 - **Paid ads test:** Instagram Reels in India costs about ₹45–140 per 1,000 views and ₹4–55 per click. Use a real pre-order, not "notify me".
+**Decision (Raj, 2026-11-18, session 7):** 18+ content lives on a **separate subdomain**. No nudity or vulgar content; censored words (asterisks) and hint-style silhouette art only (no anime style for anything sexual). Launch order: normal games + Couple Pass go live first once a payment gateway approves them; the **18+ subdomain stays offline until the gateway has reviewed and approved the 18+ content itself, in writing** (same merchant account, so approval for normal games doesn't cover it). Sex-position silhouettes only as a later deck, after that approval.
 Proposed (for Raj to decide):
 1. **Model B:** free first game + one-time **Couple Pass** that unlocks premium for both partners (not premium-only).
 2. **Flagship paid feature: Spicy Match** (text-only yes/maybe/no, Mild level free, Hot levels paid) on an 18+ subdomain, noindex, no ads. **Don't build an illustrated sex-position game.**
@@ -192,6 +193,7 @@ Proposed order after Research 2:
 - Raj: hold off on funnel tracking. Clarified the original goal: big crowd (India + global) and cheap paid premium features, including 18+ couple games (truth or dare, spicy scratch cards, sex-position games, a daily question for both partners), not AdSense. Asked whether to launch premium-only/limited and test with paid ads.
 - Deep research written to the Claude Doc "KissAndQuiz — How to Make Money (Premium + 18+ Research)": https://claude.ai/artifact/Xfw312fPBtk7VhUKrgykPx (competitor prices, pricing in India, payment gateway / law / ads / hosting rules for 18+, premium-only vs freemium, ads test plan, free vs premium feature map, risks). Summary in section 5 "Monetisation plan".
 - Proposed: Model B (free first game + one-time Couple Pass covering both partners); flagship paid feature Spicy Match (text only); "spicy, not explicit" (no illustrated sex-position game); founders' price; ₹10K Reels pre-order test in mid-January. Waiting for Raj's decisions.
+- Decision (Raj): 18+ on its own subdomain, hint-style (no nudity/vulgar), goes live only after gateway approval of the 18+ content; normal games + payments launch first.
 - No code changed.
 - Next: Raj decides; buy domain; gateway approval with sample cards.
 
