@@ -223,6 +223,13 @@ Proposed order after Research 2:
 ---
 
 ## 7. Progress log
+### 2026-11-18 (session 12) — Drop Love Calculator + FLAMES?
+- Raj: Love Calculator and FLAMES feel "noob" and look like crush tools, not couple games. Asked to validate.
+- Research: FLAMES apps describe it as a game for "teens and pre-teens who are beginning to explore the world of crushes"; love calculator apps/sites are almost all marketed as "you and your crush", audience incl. teenagers. 5lovelanguages.com: "love language test" 60.5K and "love language quiz" 27.1K US searches/month (Semrush, Oct 2026), ~1.1M visits in Oct 2026, 74% US traffic; they sell a premium report.
+- Verdict (Claude): Raj is right. High traffic but wrong audience (singles/crushes, many minors), clashes with an 18+ zone and premium positioning, and those visitors don't play partner-link games or buy a Couple Pass. **Superseded: Love Calculator + FLAMES removed from batch 1** (maybe a small side tool much later, never core).
+- Proposed replacement: **Love Language Test for Couples** (both take it, compare results; adult couple audience; write our own questions, avoid Chapman's trademarked "5 Love Languages" name; present as fun, not science; India demand unproven).
+- New proposed batch 1 free 5: How Well Do You Know Me (live), Would You Rather for Couples, Never Have I Ever for Couples, Truth or Dare for Couples (Mild, Hinglish), Love Language Test for Couples. Spicy 3 unchanged. Build next: **Would You Rather for Couples** (creates the private-reveal engine), then Love Language Test. Waiting for Raj's OK.
+
 ### 2026-11-18 (session 11) — Next game
 - Raj: Kiss Wallet on hold until earning rules are decided (rules discussion still to do). Asked which game to build next.
 - Recommendation: **Love Calculator + FLAMES first** (largest India demand, smallest build, needs Google indexing time before Feb, funnels into game 1), then **Would You Rather** (builds the private-reveal engine reused by Never Have I Ever and Yes/No/Maybe). Waiting for Raj's OK.
