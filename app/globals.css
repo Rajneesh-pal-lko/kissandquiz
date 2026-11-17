@@ -128,3 +128,94 @@ input[type="text"]:focus { border-color: var(--brand); }
 }
 
 footer { margin-top: 40px; text-align: center; color: var(--muted); font-size: 13px; }
+
+/* ---------- Header ---------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.back {
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--muted);
+}
+.back:hover { color: var(--brand-dark); }
+
+/* ---------- Game store (home) ---------- */
+.wrap.wide { max-width: 1080px; }
+
+.hero { margin: 8px 0 8px; max-width: 620px; }
+.hero h1 { font-size: 34px; }
+@media (min-width: 720px) {
+  .hero { margin: 24px 0 16px; }
+  .hero h1 { font-size: 44px; }
+}
+
+.section-title {
+  font-size: 20px;
+  margin: 28px 0 14px;
+}
+
+.game-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 560px) { .game-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 880px) { .game-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.game-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border-radius: var(--radius);
+  overflow: hidden;
+  text-decoration: none;
+  color: var(--ink);
+  box-shadow: 0 6px 24px rgba(232, 51, 111, 0.08);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+a.game-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(232, 51, 111, 0.18);
+}
+.game-card.soon { cursor: default; }
+.game-card.soon .game-art { filter: saturate(0.55); opacity: 0.8; }
+
+.game-art {
+  position: relative;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.game-emoji { font-size: 60px; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.15)); }
+
+.badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 99px;
+}
+.badge.live { background: #fff; color: var(--brand-dark); }
+
+.game-body { padding: 16px 18px 20px; }
+.game-meta {
+  display: flex;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.game-body h3 { font-size: 18px; margin: 6px 0 6px; line-height: 1.25; }
+.game-body p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }

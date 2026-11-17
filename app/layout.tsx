@@ -2,12 +2,12 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "KissAndQuiz — How Well Does Your Partner Know You?",
+  title: "KissAndQuiz — Free Games for Couples",
   description:
-    "Free couple quiz. Answer 10 questions about yourself, send the link to your partner, and see how well they really know you. No app, no login.",
+    "Free couple games you play by sharing a link: quizzes, dares and date ideas. No app, no login, no paywall.",
   openGraph: {
-    title: "How well do you know me? 💘",
-    description: "Take my couple quiz on KissAndQuiz and see your score.",
+    title: "KissAndQuiz — Free Games for Couples 💞",
+    description: "Quizzes, dares and date ideas you play together over a link.",
     type: "website",
   },
 };
