@@ -123,6 +123,11 @@ Proposed order after Research 2:
 ---
 
 ## 7. Progress log
+### 2026-11-18 (session 4)
+- Live at https://kissandquiz-mu.vercel.app with MongoDB + Resend configured: `/api/me/` returns `{"error":"signed_out","accounts":true}`.
+- Test email setup: Resend domain happynewyear2027.in (sending verified; "receiving" MX not needed, keep it off), new send-only API key, `EMAIL_FROM=KissAndQuiz <login@happynewyear2027.in>`, `SITE_URL=https://kissandquiz-mu.vercel.app`. Switch to kissandquiz.com once bought.
+- Next: Raj tests sign-in email + quiz flow on two phones; rotate Atlas password.
+
 ### 2026-11-18 (session 3)
 - Decision (Raj): add **optional creator accounts** now (option A): name + email, **one profile per email**, sign in with an emailed link (no passwords). Partners never need an account (keeps the one-tap join).
 - Built and pushed (`c04b53e`): users/loginTokens/sessions in MongoDB; `/account` (sign in, profile, quiz list, rename, log out, delete account with its quizzes and results), `/account/verify`, `/privacy`; quizzes made while signed in are saved to the account; quizzes made on the phone are claimed on sign-in; results readable on any signed-in phone. Email via Resend (free: 3,000/month, 100/day, needs a verified domain).
