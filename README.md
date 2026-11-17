@@ -23,10 +23,16 @@ npm run build    # static site in ./out
 ```
 
 ## Deploy on Vercel
+1. Import the GitHub repo in Vercel (framework: Next.js, default settings).
+2. In Vercel → Project → Settings → Environment Variables, add `MONGODB_URI` (MongoDB Atlas connection string; see `.env.example`). Redeploy after adding it.
+3. In MongoDB Atlas → Network Access, allow `0.0.0.0/0` (Vercel functions have changing IPs). Use a strong database password.
 
-1. Import this repo at vercel.com/new (framework: Next.js, no settings to change).
-2. Add the domain `kissandquiz.com` under Project → Settings → Domains, then point
-   your DNS at Vercel as it shows you.
+Without `MONGODB_URI` in production, the site still works: quiz links fall back to the old long `/play/#…` format and creators can't see results.
+
+### Data
+- `quizzes`: `{ _id: shortId, n, a, ownerHash, createdAt }`. `results`: `{ quizId, partner, guesses, score, total, createdAt }`.
+- Both auto-delete after 180 days (TTL index on `createdAt`, created automatically).
+- The creator's secret token is kept only on their phone; the database stores its SHA-256 hash.
 
 ## Project layout
 

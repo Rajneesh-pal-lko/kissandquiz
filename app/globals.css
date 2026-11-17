@@ -310,3 +310,14 @@ a.game-card:hover {
 .result-item:last-child { border-bottom: 0; }
 
 .tip { margin-top: 14px; }
+
+/* ---------- Results ---------- */
+.private-box {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--soft);
+}
+.private-box p { margin: 0 0 10px; }
+.private-box .btn { margin-bottom: 10px; }
+.result-block { margin-top: 10px; }

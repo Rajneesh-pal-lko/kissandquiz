@@ -9,9 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "mongodb": "7.9.0",
     "next": "15.5.29",
     "react": "19.2.9",
-    "react-dom": "19.2.9"
+    "react-dom": "19.2.9",
+    "server-only": "0.0.1"
   },
   "devDependencies": {
     "@types/node": "22.10.2",

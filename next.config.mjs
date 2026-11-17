@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Static export: the whole site is plain HTML/JS, deployable free on Vercel or any static host.
-  output: "export",
+  // Pages are still pre-rendered as static HTML where possible. API routes under app/api
+  // and /q/<id> run as Vercel Functions (they need the database).
   trailingSlash: true,
 };
 

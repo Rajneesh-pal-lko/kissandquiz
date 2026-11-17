@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { QUESTIONS, pickQuestions, pickReplacement } from "@/lib/questions";
 import { NAME_MAX, buildPlayUrl } from "@/lib/quizLink";
 import { load, remove, save } from "@/lib/storage";
+import { addMyQuiz, resultsUrl } from "@/lib/myQuizzes";
 
 type Step = "name" | "questions" | "review" | "share";
 
@@ -15,6 +16,9 @@ type Draft = {
   answers: (number | null)[];
   current: number;
   link: string;
+  /** Set when the link is a short /q/<id>/ link saved on the server. */
+  quizId?: string;
+  token?: string;
 };
 
 const DRAFT_KEY = "kq.create.v1";
@@ -46,6 +50,8 @@ export default function CreatePage() {
   const [copied, setCopied] = useState(false);
   const [canShare, setCanShare] = useState(false);
   const [fromReview, setFromReview] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [copiedPrivate, setCopiedPrivate] = useState(false);
   const autoNext = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load a saved draft (so a refresh doesn't lose work), or start fresh.
@@ -155,11 +161,39 @@ export default function CreatePage() {
     update({ qIds, answers, link: "" });
   }
 
-  function makeLink() {
-    if (!d || !allAnswered || !trimmedName) return;
+  async function makeLink() {
+    if (!d || !allAnswered || !trimmedName || creating) return;
     const pairs = d.qIds.map((id, i) => [id, d.answers[i] as number] as [number, number]);
-    const link = buildPlayUrl(window.location.origin, { n: trimmedName, a: pairs });
-    update({ link, step: "share" });
+    const origin = window.location.origin;
+    setCreating(true);
+    try {
+      // Short link saved on the server, so the creator can see the partner's result.
+      const res = await fetch("/api/quiz/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ n: trimmedName, a: pairs }),
+      });
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      const { id, token } = (await res.json()) as { id: string; token: string };
+      addMyQuiz({ id, token, name: trimmedName, createdAt: new Date().toISOString() });
+      update({ link: `${origin}/q/${id}/`, quizId: id, token, step: "share" });
+    } catch {
+      // Server not reachable: fall back to the old long link (no results tracking).
+      update({ link: buildPlayUrl(origin, { n: trimmedName, a: pairs }), quizId: undefined, token: undefined, step: "share" });
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  async function copyPrivate() {
+    if (!d?.quizId || !d.token) return;
+    try {
+      await navigator.clipboard.writeText(resultsUrl(window.location.origin, { id: d.quizId, token: d.token }));
+      setCopiedPrivate(true);
+      setTimeout(() => setCopiedPrivate(false), 2000);
+    } catch {
+      // Ignore.
+    }
   }
 
   function startOver() {
@@ -291,8 +325,8 @@ export default function CreatePage() {
               );
             })}
           </ol>
-          <button className="btn" onClick={makeLink} disabled={!allAnswered}>
-            Create my quiz link 💘
+          <button className="btn" onClick={makeLink} disabled={!allAnswered || creating}>
+            {creating ? "Creating your link…" : "Create my quiz link 💘"}
           </button>
           <div className="nav-row">
             <button className="btn ghost" onClick={() => update({ step: "name" })}>
@@ -326,10 +360,27 @@ export default function CreatePage() {
           <button className="btn ghost" onClick={copy}>
             {copied ? "Copied ✓" : "Copy link"}
           </button>
-          <p className="muted center tip">Tip: the link is saved on this phone, so you can come back here to copy it again.</p>
+          {d.quizId && d.token ? (
+            <div className="private-box">
+              <p>
+                <strong>See your partner's score</strong> once they play.
+              </p>
+              <Link href="/results/" className="btn">
+                My results 💌
+              </Link>
+              <p className="muted">
+                Results are saved on this phone. To check from another phone, save this private link (don't share it):
+              </p>
+              <button className="link-btn" onClick={copyPrivate}>
+                {copiedPrivate ? "Private link copied ✓" : "Copy my private results link"}
+              </button>
+            </div>
+          ) : (
+            <p className="muted center tip">Tip: the link is saved on this phone, so you can come back here to copy it again.</p>
+          )}
           <div className="nav-row">
             <button className="btn ghost" onClick={() => update({ step: "review" })}>
-              Edit answers
+              {d.quizId ? "Edit (new link)" : "Edit answers"}
             </button>
             <button className="btn ghost" onClick={startOver}>
               New quiz

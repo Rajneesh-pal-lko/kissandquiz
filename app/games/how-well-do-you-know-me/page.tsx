@@ -33,6 +33,9 @@ export default function HowWellDoYouKnowMe() {
       <Link href="/create/" className="btn">
         Create my quiz
       </Link>
+      <p className="muted center tip">
+        Already made one? <Link href="/results/">See your partner's score →</Link>
+      </p>
 
       <div className="card">
         <h2>How it works</h2>
