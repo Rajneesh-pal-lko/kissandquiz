@@ -36,12 +36,14 @@ To verify still: domain purchase, Instagram/YouTube/X handles (`kissandquiz`), t
 ### Current files
 | Path | Purpose |
 | --- | --- |
-| `app/page.tsx` | Home page, with a "Create my quiz" call to action |
+| `app/page.tsx` | Home page = **game store**: hero + "Play now" and "Coming soon" card grids, built from `lib/games.ts` |
+| `lib/games.ts` | Game catalog (slug, title, tagline, emoji, status live/soon, category, time, card colours). To launch a game: add its page under `app/games/<slug>/` and set status to `live` |
+| `app/games/how-well-do-you-know-me/page.tsx` | Game 1 intro page (old home content) with its own SEO title, links to `/create/` |
 | `app/create/page.tsx` | Creator enters a name, answers 10 random questions about themselves, gets a share link plus WhatsApp and copy buttons |
 | `app/play/page.tsx` | Partner opens the link, guesses each answer (right/wrong shown), gets a score and verdict, can send the score on WhatsApp and make their own quiz |
 | `lib/questions.ts` | Bank of 20 questions, 4 options each, Indian-flavoured. **Only append; never reorder or delete** (links store question indexes) |
 | `lib/quizLink.ts` | Encodes `{n: name, a: [[questionIdx, answerIdx], …]}` as base64url in the URL **hash** (`/play/#…`). UTF-8 safe (Hindi and emoji tested). Light obfuscation, not security |
-| `app/layout.tsx` | Metadata and Open Graph tags |
+| `app/layout.tsx` | Site-wide metadata ("Free Games for Couples") and Open Graph tags |
 | `README.md` | Run, build and deploy steps |
 
 ### Game 1: "How Well Do You Know Me?" (built, 2026-11-17)
@@ -86,6 +88,14 @@ Key facts:
 ---
 
 ## 7. Progress log
+### 2026-11-17 (session 3)
+- First Vercel deploy is live.
+- Decision (Raj): KissAndQuiz is a **store of many couple games**, not one quiz. Home page redesigned as a game store: responsive card grid (1/2/3 columns), "Play now" section (game 1) and "Coming soon" section (Would You Still Love Me If…, Couple Ludo with Dares, Truth or Dare, Deep Questions Deck, Date Night Scratch-off, Daily Couple Question).
+- Game 1 moved to its own page `/games/how-well-do-you-know-me/`. URL convention for new games: `/games/<slug>/`. `/create/` and `/play/` were not moved, so old shared links still work.
+- Coming-soon cards are not clickable yet (no "notify me", since we have no backend).
+- Build passes; checked on desktop and mobile. Pushed as `71ee823`.
+- Next: test on two phones, buy the domain, add the share image.
+
 ### 2026-11-17 (session 2)
 - First Vercel deploy was blocked: Next.js 15.5.6 has a security vulnerability (CVE-2025-66478).
 - Upgraded to next 15.5.29 and react/react-dom 19.2.9 (exact versions), ran `npm audit fix`. Build passes. Pushed as `1908ed3`.
