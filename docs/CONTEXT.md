@@ -44,13 +44,17 @@ To verify still: domain purchase, Instagram/YouTube/X handles (`kissandquiz`), t
 | `app/play/page.tsx` | Old long links `/play/#…` (kept forever; no results saved). Uses `PlayGame`. Partner flow: intro → guess each question (one guess, locked after reveal, shows creator's answer) with Back/Next → score + verdict → "See all answers" review, send score on WhatsApp / native share, play again, make own quiz. Progress saved in sessionStorage per link; reloads on hash change |
 | `app/play/layout.tsx` | Share preview title "How well do you know me? 💘"; `noindex` (quiz links are personal) |
 | `lib/questions.ts` | **81 questions (78 active)** in 7 categories (favourites, habits, personality, love, past, future, funny), 4–6 options each. Index = stable ID. **Only append; never reorder or delete questions or options.** Use `retired: true` to stop picking a question (old links still decode). Picker takes max 2 per category. Static for now; can move to a DB later keeping the index as ID |
-| `lib/store.ts` | Server-only data layer: MongoDB (cached client, TTL indexes, 180-day auto-delete) or in-memory store in local dev. Collections `quizzes` `{_id: 8-char id, n, a, ownerHash, createdAt}` and `results` `{quizId, partner, guesses, score, total, createdAt}` |
+| `lib/store.ts` | Server-only data layer: MongoDB (cached client, TTL indexes, 180-day auto-delete) or in-memory store in local dev. Collections `quizzes` `{_id: 8-char id, n, a, ownerHash, ownerUserId?, createdAt}`, `users` (unique email), `loginTokens`, `sessions`, and `results` `{quizId, partner, guesses, score, total, createdAt}` |
 | `lib/quizRules.ts` | Shared validation (name, pairs, guesses, score) for browser and API |
 | `app/api/quiz/…` | `POST /api/quiz/` create → `{id, token}`; `GET /api/quiz/<id>/`; `POST /api/quiz/<id>/result/` (score computed server-side, max 10 per quiz); `GET /api/quiz/<id>/results/` with header `x-owner-token` (creator only) |
 | `app/q/[id]/` | Short quiz link, server-rendered so WhatsApp preview says "How well do you know <name>? 💘"; noindex. Partner can enter their name; result saved once (replays not saved) |
 | `app/results/` | Creator's results page (partner's score + every answer). Quizzes listed from this phone's localStorage (`kq.myquizzes.v1`) or a private link `/results/?id=<id>#<token>` |
 | `components/PlayGame.tsx` | The partner game, shared by `/play/#…` (old links) and `/q/<id>/` |
 | `lib/myQuizzes.ts` | Creator's quiz list + secret tokens in localStorage |
+| `lib/auth.ts` | Optional accounts: email validation, session cookie `kq_session` (hashed in DB, 30 days), current user, Resend email sender (dev: link logged) |
+| `app/api/auth/{start,verify,logout}/` | Email sign-in link flow. `start` {name,email,consent} → emails `/account/verify/#<token>` (single use, 15 min, max 3 per 15 min). `verify` {t} → creates account if email is new (one per email; existing keeps its name), signs in |
+| `app/api/me/` | GET profile + quizzes; PATCH name; DELETE account (cascades quizzes + results). `app/api/me/claim/` moves this phone's quizzes into the account |
+| `app/account/`, `app/account/verify/`, `app/privacy/` | Account page (sign in / profile / quizzes / log out / delete), sign-in landing page (button, so email scanners can't use the link), plain-language privacy policy |
 | `lib/storage.ts` | Safe localStorage/sessionStorage wrappers (never throw) |
 | `lib/quizLink.ts` | Encodes `{n: name, a: [[questionIdx, answerIdx], …]}` as base64url in the URL **hash** (`/play/#…`). UTF-8 safe (Hindi and emoji tested). Light obfuscation, not security. Decoder cleans input: name max 24 chars, max 30 pairs, drops duplicates and bad pairs |
 | `app/layout.tsx` | Site-wide metadata ("Free Games for Couples") and Open Graph tags |
@@ -108,6 +112,7 @@ Proposed order after Research 2:
 3. Hosting: **stay on Vercel Hobby for now** (decided 2026-11-17). Before turning on ads, affiliate links or payments, either upgrade to Vercel Pro or move to Cloudflare Pages. Keep code portable (no Vercel-only features) so a move stays cheap.
 4. Default share image (OG, 1200×630, under 300 KB) + **score-card image** the partner can share.
 5. **Raj: connect MongoDB** — add `MONGODB_URI` in Vercel env vars, allow `0.0.0.0/0` in Atlas Network Access, redeploy, test create → partner plays → results on two phones. Then **change the Atlas DB password** (it was shared in chat) and update the Vercel variable. Until then the site falls back to long links.
+5b. **Accounts go live after:** buy kissandquiz.com → create a Resend account → verify the domain (DNS records) → add `RESEND_API_KEY`, `EMAIL_FROM` (e.g. `KissAndQuiz <hello@kissandquiz.com>`), `SITE_URL=https://kissandquiz.com` in Vercel → redeploy. Until then `/account/` shows "coming soon". Add a real contact email to `/privacy/`.
 6. Free analytics (Cloudflare Web Analytics): share rate, partner completion, partners who make their own quiz.
 7. Love Calculator + FLAMES (Hinglish, shareable result, funnels into game 1). India SEO magnet.
 8. Game 2: "Would You Still Love Me If…".
@@ -118,6 +123,12 @@ Proposed order after Research 2:
 ---
 
 ## 7. Progress log
+### 2026-11-18 (session 3)
+- Decision (Raj): add **optional creator accounts** now (option A): name + email, **one profile per email**, sign in with an emailed link (no passwords). Partners never need an account (keeps the one-tap join).
+- Built and pushed (`c04b53e`): users/loginTokens/sessions in MongoDB; `/account` (sign in, profile, quiz list, rename, log out, delete account with its quizzes and results), `/account/verify`, `/privacy`; quizzes made while signed in are saved to the account; quizzes made on the phone are claimed on sign-in; results readable on any signed-in phone. Email via Resend (free: 3,000/month, 100/day, needs a verified domain).
+- Tested locally (in-memory store, dev sign-in links): sign up, same email on a 2nd phone keeps the first name, results via account, quiz created while signed in, rename, reused link rejected, bad email / no consent rejected, rate limit (4th link → 429), stranger can't read results, logout, delete cascade (partner link then shows "expired"). No console errors.
+- Next: Raj connects MongoDB and tests on phones; buy domain → Resend → env vars to switch accounts on.
+
 ### 2026-11-18 (session 2)
 - Built the backend (commit `dc813a3`): short links `/q/<id>/`, creator results page `/results/`, personal WhatsApp preview, partner name (optional), server-side scoring, max 10 results per quiz, 180-day auto-delete, creator secret token (only hash stored). Old `/play/#…` links unchanged; create falls back to them if the API is unavailable.
 - Decision: MongoDB Atlas Free + Next.js API routes on Vercel. Static export removed (superseded the "no backend / static export" decision because creator results need a database).
