@@ -123,10 +123,10 @@ Key facts:
 
 ## 6. Next steps
 Proposed order after Research 2:
+0. **Raj: review the redesign** on phone and laptop: branch `redesign-v2` (commit `fc562bc`), Vercel preview under the project's Deployments tab (`kissandquiz-git-redesign-v2-…vercel.app`). If happy, merge `redesign-v2` → `main` (PR: https://github.com/Rajneesh-pal-lko/kissandquiz/pull/new/redesign-v2).
 1. Test the current flows on two real phones (WhatsApp and Instagram in-app browsers, Chrome, Safari).
 2. Buy kissandquiz.com (+ kissnquiz.com redirect); reserve the `kissandquiz` handles.
 3. Hosting: **stay on Vercel Hobby for now** (decided 2026-11-17). Before turning on ads, affiliate links or payments, either upgrade to Vercel Pro or move to Cloudflare Pages. Keep code portable (no Vercel-only features) so a move stays cheap.
-0. **Raj: review the redesign** (branch `redesign-v2`, Vercel preview link) on phone and laptop → merge to `main` if happy.
 4. ~~Default share image~~ (done in the redesign, 76 KB) → still to do: **score-card image** the partner can share.
 5. **Raj: connect MongoDB** — add `MONGODB_URI` in Vercel env vars, allow `0.0.0.0/0` in Atlas Network Access, redeploy, test create → partner plays → results on two phones. Then **change the Atlas DB password** (it was shared in chat) and update the Vercel variable. Until then the site falls back to long links.
 5b. **Accounts go live after:** buy kissandquiz.com → create a Resend account → verify the domain (DNS records) → add `RESEND_API_KEY`, `EMAIL_FROM` (e.g. `KissAndQuiz <hello@kissandquiz.com>`), `SITE_URL=https://kissandquiz.com` in Vercel → redeploy. Until then `/account/` shows "coming soon". Add a real contact email to `/privacy/`.
