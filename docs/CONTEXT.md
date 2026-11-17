@@ -187,6 +187,20 @@ Batch 1 lineup (proposed):
 
 Waves: **Wave 1 by Feb 7, 2027:** free 5 (HWDYKM, Love Calc+FLAMES, Truth or Dare Mild, Never Have I Ever, Would You Rather) + spicy 3 (Spicy Match, Spicy ToD, Naughty NHIE) — uses engines A, B, C, D only. **Wave 2 (Mar–Apr):** Ludo + Spicy Ludo, Antakshari, Who's More Likely, Would You Still Love Me If, Shoe Game, Dare Dice, Scratch Cards, Hot Seat, Fantasy Builder, 7-Day Challenge. Add a game only when the previous one is good.
 
+### Idea: Kiss Wallet / couple "khata" (Raj, 2026-11-18, session 10) — rated, waiting for go-ahead
+Raj's idea: a couple profile with a wallet. Whoever wins a game earns kisses owed by the partner; partners can bet 1, 2 or more kisses on a game; the paid tier adds other rewards (including sexual acts).
+**Rating (Claude): 6/10 as described, 8/10 with the fixes below.** Strongest idea so far for retention: it ties all games into one loop (play → win/bet → balance → come back to settle).
+- For: playfulness predicts relationship satisfaction (Proyer 2014, small effect); shared novel and arousing activities raise relationship quality (Aron et al. 2000); the "Love Bank" metaphor (Willard Harley) is widely used by counsellors; an open balance is a reason to return.
+- Against: keeping score is an *exchange* norm, not a *communal* one (Clark & Mills); tangible, performance-contingent rewards undermine intrinsic motivation (Deci, Koestner & Ryan 1999 meta-analysis of 128 studies, d ≈ -0.28 to -0.40); sex done to avoid a partner's disappointment (avoidance motives) predicts lower desire and satisfaction (Impett et al.). Precedents exist: Kahnoodle (2011) had "Koupons" incl. oral sex and was criticised for making love extrinsic; Kyupid (points → nice/naughty "kyupons"), Love Voucher, Couple Coupons. New part = earned by winning games + bets, on the web, over one link.
+- India Online Gaming Act 2025 (rules in force 1 May 2026) bans online money games; "other stakes" = tokens/credits bought with money. **Kisses must never be buyable or convertible to money**; the Couple Pass unlocks decks, not kisses.
+Fixes (proposed design):
+1. Kisses only in the free wallet (a kiss is mutual, low pressure). Name idea: "Kiss Khata".
+2. Spicy rewards are **wishes, not debts**: only items both partners marked "Yes" in Yes/No/Maybe can be wagered; the giver can always skip/swap; no "owed" counter shown for spicy items; spicy wishes expire.
+3. Betting with guard rails: cap per bet (e.g. 1–5), "double or nothing" comeback, luck elements so the better player doesn't always win, a "clear the khata" / forgive-all button.
+4. Games need winners: add a "guess your partner" scoring mode (two-way How Well Do You Know Me, guess-your-partner Would You Rather / Never Have I Ever). In Mild Truth or Dare, skipping a dare can cost 1 kiss; in Spicy, skipping is always free.
+5. Pairing via the shared couple link (no email needed); email optional to keep it.
+Timing idea: launch the Kiss Khata on **Kiss Day, Feb 13, 2027** (Valentine Week).
+
 ## 6. Next steps
 **Session 7 (proposed, priority order; replaces the session 6 order once Raj approves):** 0) Raj decides: Model B, "spicy not explicit", founders' price, hosting (Vercel Pro vs Cloudflare). 1) Buy kissandquiz.com (gateways need a live site with terms, refund policy, contact). 2) Email Razorpay + Cashfree 10 sample Spicy Match cards; get written approval; one lawyer consult. 3) Build Spicy Match (Mild free + one paid Hot level) on the existing link + MongoDB, 18+ subdomain. 4) Checkout (UPI + cards) + Couple Pass unlock for both partners + simple funnel tracking (paused by Raj for now; needed before the ads test). 5) Mid-Jan ₹10,000 ads pre-order test. 6) Feb 7–14 Valentine push with founders' offer. 7) Feb 15 review; if people pay, add Scratch-off dates and Truth or Dare Spicy.
 
@@ -209,6 +223,12 @@ Proposed order after Research 2:
 ---
 
 ## 7. Progress log
+### 2026-11-18 (session 10) — Kiss Wallet idea rated
+- Raj: couple wallet where the winner earns kisses from the partner, kisses can be bet, paid tier adds other (sexual) rewards. Asked for a research-based rating.
+- Research: communal vs exchange relationships (Clark & Mills), overjustification (Deci, Koestner & Ryan 1999), self-expansion (Aron et al. 2000), approach/avoidance sexual motives (Impett et al.), adult playfulness (Proyer), Love Bank (Harley), precedents (Kahnoodle, Kyupid, love-coupon apps), India Online Gaming Act 2025.
+- Rating: 6/10 as described, 8/10 with fixes (kisses only in free; spicy = mutual-yes wishes with free skip; bet caps; never buyable). Details in section 5. Waiting for Raj's go-ahead.
+- No code changed.
+
 ### 2026-11-18 (session 9) — Batch 1: known games only?
 - Raj: batch 1 (5 free + 3 spicy) should be the most popular, already-known games, not new ones, so visitors know why they came.
 - Research: Semrush search volumes (India love calculator / FLAMES; US truth or dare, never have I ever, would you rather), MAYA principle (Hekkert et al. 2003), yes/no/maybe list as an established sex-therapy tool, crowded truth-or-dare sites incl. Hinglish ones.
