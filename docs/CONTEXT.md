@@ -29,7 +29,7 @@ To verify still: domain purchase, Instagram/YouTube/X handles (`kissandquiz`), t
 
 ## 3. Code and hosting
 - **Repo:** https://github.com/Rajneesh-pal-lko/kissandquiz (branch `main`). Claude has push access via the Claude GitHub App.
-- **Stack:** Next.js 15 (App Router) + React 19 + TypeScript, **static export** (`output: "export"`), plain CSS (`app/globals.css`), no backend, no database.
+- **Stack:** Next.js 15 (App Router, pinned 15.5.29) + React 19 (19.2.9) + TypeScript, **static export** (`output: "export"`), plain CSS (`app/globals.css`), no backend, no database.
 - **Hosting plan:** Vercel (free), with the custom domain kissandquiz.com. Raj already hosts happynewyear2027.in on Vercel (domain from GoDaddy).
 - **Commands:** `npm install`, `npm run dev` (localhost:3000), `npm run build` (output in `./out`).
 
@@ -75,8 +75,8 @@ Key facts:
 ---
 
 ## 6. Next steps
-1. Buy kissandquiz.com (plus kissnquiz.com as a redirect); reserve the `kissandquiz` handle on Instagram, YouTube and X.
-2. Deploy the repo on Vercel and connect the domain; test the full flow on two phones.
+1. Confirm the Vercel deploy of commit `1908ed3` succeeds; test the full flow on two phones using the vercel.app URL.
+2. Buy kissandquiz.com (plus kissnquiz.com as a redirect), connect it in Vercel; reserve the `kissandquiz` handle on Instagram, YouTube and X.
 3. Add a share image (Open Graph) so WhatsApp and Instagram links show a nice preview card.
 4. Add a Hindi/Hinglish question pack and an option to choose the language.
 5. Build game 2: "Would You Still Love Me If…".
@@ -86,6 +86,12 @@ Key facts:
 ---
 
 ## 7. Progress log
+### 2026-11-17 (session 2)
+- First Vercel deploy was blocked: Next.js 15.5.6 has a security vulnerability (CVE-2025-66478).
+- Upgraded to next 15.5.29 and react/react-dom 19.2.9 (exact versions), ran `npm audit fix`. Build passes. Pushed as `1908ed3`.
+- Decision: stay on Next.js 15 (latest backport patch) for now, not 16, to avoid breaking changes. Remaining `npm audit` warnings (PostCSS inside Next, sharp) are build-time only and don't ship in the static site; revisit when moving to Next 16.
+- Next: confirm deploy, test on two phones, buy the domain, add the share image.
+
 ### 2026-11-17
 - Researched the niche, couple games and brand names (three Claude Docs above).
 - Chose the brand **KissAndQuiz**, domain **kissandquiz.com**.
