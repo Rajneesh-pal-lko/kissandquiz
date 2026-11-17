@@ -69,6 +69,21 @@ Key facts:
 - **Risks:** Google AI Overviews cut clicks to the top result by about 58%; demand is seasonal (Valentine's spike); one-time use (revenue of indie couple apps fades after launch spikes); Indian ad revenue per view is very low.
 - **Monetization direction:** viral free games first, then a paid tier or one-off purchases (premium packs priced in rupees, printable decks), not ads alone.
 
+### Research 2 (2026-11-17): is game 1 designed right? What should the platform be?
+**Game 1 verdict:** the core loop (creator answers about self → link → partner guesses → score) is the proven "BuddyMeter / Bestie Quiz" format. Keep it. Gaps vs. the winners, by impact:
+1. **Creator never sees results.** Friendship-quiz sites link every taker's score back to the creator's scoreboard/leaderboard, which the creator keeps refreshing. Ours depends on the partner manually sending the score. Needs a tiny backend.
+2. **No shareable score-card image** (competitors generate one for WhatsApp/Stories). Doable static with canvas.
+3. **Link preview can't be personal.** Quiz data is in the URL hash, which crawlers never see, so WhatsApp can't show "How well do you know Riya?". WhatsApp also drops og:images over ~300–600 KB. Fix: short links (`/q/<id>`) + server-rendered meta.
+4. **Long links** (WhatsApp sometimes cuts them). Short IDs fix this too.
+5. **No custom questions** (competitors let creators write their own).
+6. **One taker per link.** Friendship quizzes get many takers per link (leaderboard drama); a couple quiz gets one. Options: let friends play too ("who knows me best"), and/or a couple-only **Mirror mode** (both answer, then compare, like Paired's "answer to unlock your partner's answer").
+
+**What couples search for (clusters):** (A) games to play together — viral, weak SEO; (B) fun "tests" — love calculator, FLAMES (huge in India), compatibility, love language; (C) words to send — wishes, shayari, quotes, captions, love letters (huge but saturated, AI-Overview-prone, low RPM); (D) plans — date ideas, gift ideas, Valentine Week (Feb 7–14, a big India search moment); (E) talk prompts — questions to ask, truth or dare, would you rather.
+**Strategy:** build interactive **tools and games, not article lists**. AI Overviews cut organic clicks (Pew: 15% → 8%); interactive/transactional pages hold up better. Each tool gets an SEO landing page and a "send this to your partner" share step.
+**Money:** India entertainment AdSense RPM ≈ ₹40–165 per 1,000 pageviews, so ads alone won't pay. Mix: ads + gift affiliate links + premium packs later.
+**Hosting risk:** Vercel Hobby is **non-commercial only** (ads/affiliate not allowed). Cloudflare Pages free tier allows commercial use, unlimited bandwidth, and has Workers + D1 for a small backend. Supabase free pauses after 7 days idle (bad for quiz links opened weeks later).
+**Privacy:** storing names/answers brings India's DPDP Act into play (full compliance due May 2027). Keep data minimal, add a privacy notice, auto-delete old quizzes.
+
 ---
 
 ## 5. Roadmap (priority order)
@@ -80,17 +95,30 @@ Key facts:
 ---
 
 ## 6. Next steps
-1. Test the new create/play flows on two real phones (WhatsApp in-app browser, Instagram in-app browser, Chrome, Safari).
-2. Buy kissandquiz.com (plus kissnquiz.com as a redirect), connect it in Vercel; reserve the `kissandquiz` handle on Instagram, YouTube and X.
-3. Add a share image (Open Graph) so WhatsApp and Instagram links show a nice preview card.
-4. Add a Hindi/Hinglish question pack and an option to choose the language.
-5. Build game 2: "Would You Still Love Me If…".
-6. Add simple analytics (e.g. Vercel Analytics or Plausible) to track: share rate, partner completion rate, and how many partners make their own quiz.
-7. Validation test: post 20–30 Shorts/Reels before Valentine's Week. Target at least 30% of creators sending the link, and at least 10% returning in week 2.
+Proposed order after Research 2 (waiting for Raj to confirm the hosting + backend decisions):
+1. Test the current flows on two real phones (WhatsApp and Instagram in-app browsers, Chrome, Safari).
+2. Buy kissandquiz.com (+ kissnquiz.com redirect); reserve the `kissandquiz` handles.
+3. **Decide:** move hosting from Vercel Hobby to Cloudflare Pages (free, commercial use allowed). Recommended before any ads/affiliate.
+4. Default share image (OG, 1200×630, under 300 KB) + **score-card image** the partner can share.
+5. **Decide:** add a small backend (Cloudflare Pages Functions + D1) for short links `/q/<id>`, a "who took my quiz" results page for the creator, and personalised link previews. Old `/play/#…` links must keep working.
+6. Free analytics (Cloudflare Web Analytics): share rate, partner completion, partners who make their own quiz.
+7. Love Calculator + FLAMES (Hinglish, shareable result, funnels into game 1). India SEO magnet.
+8. Game 2: "Would You Still Love Me If…".
+9. Hindi/Hinglish question pack.
+10. Valentine Week hub (Feb 7–14, 2027): one mini game or tool per day. Must be live by early Feb.
+11. Later: Mirror mode (both partners answer), custom questions, AI love letter / shayari generator (API cost → premium), daily question with streaks, date-idea scratch card with gift affiliate links.
 
 ---
 
 ## 7. Progress log
+### 2026-11-17 (session 5)
+- Deep research: how quiz-by-link games are designed (BuddyMeter-style friendship quiz sites, couple quiz tools, Paired), what couples search for, AI Overview impact, India ad RPM, hosting terms, DPDP Act. Findings in section 4 → "Research 2".
+- Verdict: game 1's core loop is right; biggest gaps are creator-side results, score-card image, personalised/short links, custom questions, one taker per link.
+- Platform direction (proposed): interactive tools and games, not article lists; India hooks (Love Calculator/FLAMES, Valentine Week, Hinglish).
+- Flagged risk: Vercel Hobby forbids commercial use; Cloudflare Pages recommended.
+- Pending decisions for Raj: (1) move to Cloudflare Pages, (2) add a small backend for short links + creator results, (3) partner-only vs. friends-can-play leaderboard.
+- Next: Raj decides; then OG + score-card image, then backend.
+
 ### 2026-11-17 (session 4)
 - Audited game 1 end to end and fixed everything found:
   - Create: added Back/Next, 🔄 swap question, review screen with tap-to-edit and change name, saved draft across refresh, native share button (Instagram/Telegram), "Edit answers" and "New quiz" on the share screen, progress bar now reaches 100%.
