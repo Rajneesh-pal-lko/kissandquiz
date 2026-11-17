@@ -27,11 +27,27 @@ export function encodeQuiz(data: QuizData): string {
   return toBase64Url(JSON.stringify(data));
 }
 
+export const NAME_MAX = 24;
+const MAX_QUESTIONS = 30;
+
+/** Decode a link and clean it. Returns null if nothing usable is left. */
 export function decodeQuiz(code: string): QuizData | null {
   try {
-    const data = JSON.parse(fromBase64Url(code)) as QuizData;
-    if (typeof data.n !== "string" || !Array.isArray(data.a) || data.a.length === 0) return null;
-    return data;
+    const raw = JSON.parse(fromBase64Url(code)) as Partial<QuizData>;
+    if (typeof raw.n !== "string" || !Array.isArray(raw.a)) return null;
+    const name = raw.n.trim().slice(0, NAME_MAX);
+    if (!name) return null;
+    const seen = new Set<number>();
+    const pairs: [number, number][] = [];
+    for (const p of raw.a) {
+      if (!Array.isArray(p) || p.length !== 2) continue;
+      const [q, opt] = p;
+      if (!Number.isInteger(q) || !Number.isInteger(opt) || q < 0 || opt < 0 || seen.has(q)) continue;
+      seen.add(q);
+      pairs.push([q, opt]);
+      if (pairs.length >= MAX_QUESTIONS) break;
+    }
+    return pairs.length > 0 ? { n: name, a: pairs } : null;
   } catch {
     return null;
   }

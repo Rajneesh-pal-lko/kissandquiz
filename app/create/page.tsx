@@ -1,45 +1,179 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { QUESTIONS, pickQuestions } from "@/lib/questions";
-import { buildPlayUrl } from "@/lib/quizLink";
+import { useEffect, useRef, useState } from "react";
+import { QUESTIONS, pickQuestions, pickReplacement } from "@/lib/questions";
+import { NAME_MAX, buildPlayUrl } from "@/lib/quizLink";
+import { load, remove, save } from "@/lib/storage";
 
-type Step = "name" | "questions" | "share";
+type Step = "name" | "questions" | "review" | "share";
+
+type Draft = {
+  step: Step;
+  name: string;
+  qIds: number[];
+  answers: (number | null)[];
+  current: number;
+  link: string;
+};
+
+const DRAFT_KEY = "kq.create.v1";
+const AUTO_NEXT_MS = 300;
+
+function isValidDraft(d: Draft | null): d is Draft {
+  return (
+    !!d &&
+    typeof d.name === "string" &&
+    Array.isArray(d.qIds) &&
+    Array.isArray(d.answers) &&
+    d.qIds.length > 0 &&
+    d.qIds.length === d.answers.length &&
+    d.qIds.every((id, i) => {
+      const q = QUESTIONS[id];
+      const a = d.answers[i];
+      return !!q && (a === null || (Number.isInteger(a) && a >= 0 && a < q.options.length));
+    })
+  );
+}
+
+function freshDraft(): Draft {
+  const qIds = pickQuestions();
+  return { step: "name", name: "", qIds, answers: qIds.map(() => null), current: 0, link: "" };
+}
 
 export default function CreatePage() {
-  const [step, setStep] = useState<Step>("name");
-  const [name, setName] = useState("");
-  const [qIds, setQIds] = useState<number[]>([]);
-  const [current, setCurrent] = useState(0);
-  const [answers, setAnswers] = useState<[number, number][]>([]);
-  const [link, setLink] = useState("");
+  const [d, setD] = useState<Draft | null>(null);
   const [copied, setCopied] = useState(false);
+  const [canShare, setCanShare] = useState(false);
+  const [fromReview, setFromReview] = useState(false);
+  const autoNext = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Pick questions on the client only, so server and browser renders match.
+  // Load a saved draft (so a refresh doesn't lose work), or start fresh.
+  // Runs on the client only, so server and browser renders match.
   useEffect(() => {
-    setQIds(pickQuestions());
+    const saved = load<Draft>(DRAFT_KEY);
+    setD(isValidDraft(saved) ? { ...saved, current: Math.min(saved.current, saved.qIds.length - 1) } : freshDraft());
+    setCanShare(typeof navigator !== "undefined" && typeof navigator.share === "function");
+    return () => {
+      if (autoNext.current) clearTimeout(autoNext.current);
+    };
   }, []);
 
-  function start() {
-    if (name.trim().length === 0) return;
-    setStep("questions");
+  useEffect(() => {
+    if (d) save(DRAFT_KEY, d);
+  }, [d]);
+
+  if (!d) return <main className="wrap" />;
+
+  const total = d.qIds.length;
+  const answeredCount = d.answers.filter((a) => a !== null).length;
+  const allAnswered = answeredCount === total;
+  const trimmedName = d.name.trim();
+
+  function update(patch: Partial<Draft>) {
+    setD((prev) => (prev ? { ...prev, ...patch } : prev));
   }
 
-  function answer(optionIndex: number) {
-    const next: [number, number][] = [...answers, [qIds[current], optionIndex]];
-    setAnswers(next);
-    if (current + 1 < qIds.length) {
-      setCurrent(current + 1);
-    } else {
-      setLink(buildPlayUrl(window.location.origin, { n: name.trim(), a: next }));
-      setStep("share");
+  function cancelAutoNext() {
+    if (autoNext.current) {
+      clearTimeout(autoNext.current);
+      autoNext.current = null;
     }
   }
 
+  function start() {
+    if (!trimmedName) return;
+    update({ name: trimmedName, step: allAnswered ? "review" : "questions" });
+  }
+
+  function goTo(index: number) {
+    cancelAutoNext();
+    update({ current: index, step: "questions" });
+  }
+
+  function next() {
+    cancelAutoNext();
+    if (!d || d.answers[d.current] === null) return;
+    if (fromReview && allAnswered) {
+      setFromReview(false);
+      update({ step: "review" });
+      return;
+    }
+    if (d.current + 1 < total) {
+      update({ current: d.current + 1 });
+    } else {
+      // Last question: go to review, or to the first unanswered one.
+      const firstEmpty = d.answers.findIndex((a) => a === null);
+      if (firstEmpty === -1) update({ step: "review" });
+      else update({ current: firstEmpty });
+    }
+  }
+
+  function back() {
+    cancelAutoNext();
+    if (!d) return;
+    if (fromReview) {
+      setFromReview(false);
+      update({ step: allAnswered ? "review" : "questions" });
+      return;
+    }
+    if (d.current === 0) update({ step: "name" });
+    else update({ current: d.current - 1 });
+  }
+
+  function choose(optionIndex: number) {
+    if (!d) return;
+    const answers = [...d.answers];
+    answers[d.current] = optionIndex;
+    update({ answers, link: "" });
+    // Move on automatically after a short moment, so the tap feels confirmed.
+    cancelAutoNext();
+    autoNext.current = setTimeout(() => {
+      autoNext.current = null;
+      setD((prev) => {
+        if (!prev || prev.step !== "questions") return prev;
+        const done = prev.answers.every((a) => a !== null);
+        if (fromReview && done) return { ...prev, step: "review" };
+        if (prev.current + 1 < prev.qIds.length) return { ...prev, current: prev.current + 1 };
+        if (done) return { ...prev, step: "review" };
+        const firstEmpty = prev.answers.findIndex((a) => a === null);
+        return { ...prev, current: firstEmpty };
+      });
+      if (fromReview) setFromReview(false);
+    }, AUTO_NEXT_MS);
+  }
+
+  function swap() {
+    cancelAutoNext();
+    if (!d) return;
+    const replacement = pickReplacement(d.qIds);
+    if (replacement === null) return;
+    const qIds = [...d.qIds];
+    const answers = [...d.answers];
+    qIds[d.current] = replacement;
+    answers[d.current] = null;
+    update({ qIds, answers, link: "" });
+  }
+
+  function makeLink() {
+    if (!d || !allAnswered || !trimmedName) return;
+    const pairs = d.qIds.map((id, i) => [id, d.answers[i] as number] as [number, number]);
+    const link = buildPlayUrl(window.location.origin, { n: trimmedName, a: pairs });
+    update({ link, step: "share" });
+  }
+
+  function startOver() {
+    if (!window.confirm("Start a new quiz? Your current answers will be cleared.")) return;
+    cancelAutoNext();
+    setFromReview(false);
+    remove(DRAFT_KEY);
+    setD(freshDraft());
+  }
+
   async function copy() {
+    if (!d) return;
     try {
-      await navigator.clipboard.writeText(link);
+      await navigator.clipboard.writeText(d.link);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -47,57 +181,135 @@ export default function CreatePage() {
     }
   }
 
-  const shareText = `How well do you know me? 💘 Take my quiz and see your score: ${link}`;
+  const shareText = `How well do you know me? 💘 Take my quiz and see your score: ${d.link}`;
+
+  async function nativeShare() {
+    if (!d) return;
+    try {
+      await navigator.share({ title: "How well do you know me? 💘", text: "Take my quiz and see your score:", url: d.link });
+    } catch {
+      // User cancelled or share failed; nothing to do.
+    }
+  }
 
   return (
     <main className="wrap">
-      <Link href="/" className="logo">
-        Kiss<span>And</span>Quiz
-      </Link>
+      <header className="topbar">
+        <Link href="/" className="logo">
+          Kiss<span>And</span>Quiz
+        </Link>
+        <Link href="/games/how-well-do-you-know-me/" className="back">
+          About this game
+        </Link>
+      </header>
 
-      {step === "name" && (
+      {d.step === "name" && (
         <div className="card">
           <h2>First, what's your name?</h2>
           <input
             type="text"
             placeholder="e.g. Riya"
-            value={name}
-            maxLength={24}
-            onChange={(e) => setName(e.target.value)}
+            value={d.name}
+            maxLength={NAME_MAX}
+            onChange={(e) => update({ name: e.target.value, link: "" })}
             onKeyDown={(e) => e.key === "Enter" && start()}
             autoFocus
+            aria-label="Your name"
           />
-          <button className="btn" onClick={start} disabled={name.trim().length === 0 || qIds.length === 0}>
-            Start →
+          <button className="btn" onClick={start} disabled={!trimmedName}>
+            {answeredCount > 0 ? "Continue →" : "Start →"}
           </button>
-          <p className="muted">Your partner will see this name.</p>
+          <p className="muted">Your partner will see this name. You'll answer {total} quick questions about yourself.</p>
         </div>
       )}
 
-      {step === "questions" && qIds.length > 0 && (
-        <div className="card">
-          <div className="progress">
-            <div style={{ width: `${(current / qIds.length) * 100}%` }} />
-          </div>
-          <p className="muted">
-            Question {current + 1} of {qIds.length} · answer about yourself
-          </p>
-          <h2>{QUESTIONS[qIds[current]].ask}</h2>
-          <div className="options">
-            {QUESTIONS[qIds[current]].options.map((opt, i) => (
-              <button key={i} className="option" onClick={() => answer(i)}>
-                {opt}
+      {d.step === "questions" && (() => {
+        const q = QUESTIONS[d.qIds[d.current]];
+        const selected = d.answers[d.current];
+        return (
+          <div className="card">
+            <div className="progress" aria-hidden>
+              <div style={{ width: `${(answeredCount / total) * 100}%` }} />
+            </div>
+            <div className="q-head">
+              <p className="muted">
+                Question {d.current + 1} of {total} · about you
+              </p>
+              <button className="link-btn" onClick={swap} title="Get a different question">
+                🔄 Swap question
               </button>
-            ))}
+            </div>
+            <h2>{q.ask}</h2>
+            <div className="options" role="radiogroup" aria-label={q.ask}>
+              {q.options.map((opt, i) => (
+                <button
+                  key={`${d.qIds[d.current]}-${i}`}
+                  className={selected === i ? "option selected" : "option"}
+                  role="radio"
+                  aria-checked={selected === i}
+                  onClick={() => choose(i)}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+            <div className="nav-row">
+              <button className="btn ghost" onClick={back}>
+                ← Back
+              </button>
+              <button className="btn" onClick={next} disabled={selected === null}>
+                {fromReview && allAnswered ? "Done" : d.current + 1 === total ? "Review →" : "Next →"}
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {d.step === "review" && (
+        <div className="card">
+          <h2>Check your answers</h2>
+          <p className="muted">
+            Tap any answer to change it. Your partner will guess these, {trimmedName}.
+          </p>
+          <ol className="review-list">
+            {d.qIds.map((id, i) => {
+              const a = d.answers[i];
+              return (
+                <li key={id}>
+                  <button
+                    className="review-item"
+                    onClick={() => {
+                      setFromReview(true);
+                      goTo(i);
+                    }}
+                  >
+                    <span className="review-q">{QUESTIONS[id].ask}</span>
+                    <span className="review-a">{a === null ? "Not answered" : QUESTIONS[id].options[a]}</span>
+                    <span className="review-edit">Edit</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+          <button className="btn" onClick={makeLink} disabled={!allAnswered}>
+            Create my quiz link 💘
+          </button>
+          <div className="nav-row">
+            <button className="btn ghost" onClick={() => update({ step: "name" })}>
+              Change name
+            </button>
+            <button className="btn ghost" onClick={() => goTo(total - 1)}>
+              ← Back
+            </button>
           </div>
         </div>
       )}
 
-      {step === "share" && (
+      {d.step === "share" && (
         <div className="card">
-          <h2>Your quiz is ready, {name.trim()}! 🎉</h2>
-          <p className="muted">Send this link to your partner. They'll guess your answers.</p>
-          <div className="linkbox">{link}</div>
+          <h2>Your quiz is ready, {trimmedName}! 🎉</h2>
+          <p className="muted">Send this link to your partner. They'll guess your answers and see their score.</p>
+          <div className="linkbox">{d.link}</div>
           <a
             className="btn whatsapp"
             href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
@@ -106,9 +318,23 @@ export default function CreatePage() {
           >
             Send on WhatsApp
           </a>
+          {canShare && (
+            <button className="btn" onClick={nativeShare}>
+              Share to Instagram, Telegram…
+            </button>
+          )}
           <button className="btn ghost" onClick={copy}>
             {copied ? "Copied ✓" : "Copy link"}
           </button>
+          <p className="muted center tip">Tip: the link is saved on this phone, so you can come back here to copy it again.</p>
+          <div className="nav-row">
+            <button className="btn ghost" onClick={() => update({ step: "review" })}>
+              Edit answers
+            </button>
+            <button className="btn ghost" onClick={startOver}>
+              New quiz
+            </button>
+          </div>
         </div>
       )}
     </main>
