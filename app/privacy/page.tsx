@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 
 export const metadata: Metadata = {
   title: "Privacy policy | KissAndQuiz",
@@ -9,12 +10,9 @@ export const metadata: Metadata = {
 // Plain-language privacy notice. Not legal advice; review before monetising or scaling.
 export default function PrivacyPage() {
   return (
-    <main className="wrap">
-      <header className="topbar">
-        <Link href="/" className="logo">
-          Kiss<span>And</span>Quiz
-        </Link>
-      </header>
+    <>
+    <SiteHeader />
+    <main className="wrap flow">
       <h1>Privacy policy</h1>
       <p className="muted">Last updated: 18 November 2026</p>
 
@@ -67,5 +65,7 @@ export default function PrivacyPage() {
         </ul>
       </div>
     </main>
+    <SiteFooter />
+    </>
   );
 }

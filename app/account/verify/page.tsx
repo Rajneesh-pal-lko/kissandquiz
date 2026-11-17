@@ -5,7 +5,8 @@
 // person taps the button, so email link-scanners can't use it up.
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Header } from "@/components/PlayGame";
+import { Emoji } from "@/components/Emoji";
+import { SiteHeader } from "@/components/SiteChrome";
 
 export default function VerifyPage() {
   const [token, setToken] = useState<string | null>(null);
@@ -38,15 +39,25 @@ export default function VerifyPage() {
     }
   }
 
-  if (token === null) return <main className="wrap" />;
+  if (token === null)
+    return (
+      <>
+        <SiteHeader hideCta />
+        <main className="wrap" />
+      </>
+    );
 
   return (
-    <main className="wrap">
-      <Header />
-      <div className="card center">
+    <>
+      <SiteHeader hideCta />
+      <main className="wrap flow">
+      <div className="card flow-card center slide-in">
         {state === "bad" ? (
           <>
-            <h2>This link has expired 😕</h2>
+            <div className="name-hero">
+              <Emoji code="1f914" size={72} eager />
+            </div>
+            <h2>This link has expired</h2>
             <p className="muted">Sign-in links work once, for 15 minutes. Ask for a new one.</p>
             <Link href="/account/" className="btn">
               Get a new link
@@ -54,13 +65,17 @@ export default function VerifyPage() {
           </>
         ) : (
           <>
-            <h2>Sign in to KissAndQuiz 💘</h2>
+            <div className="name-hero">
+              <Emoji code="1f498" size={72} eager />
+            </div>
+            <h2>Sign in to KissAndQuiz</h2>
             <button className="btn" onClick={signIn} disabled={state === "working"}>
               {state === "working" ? "Signing in…" : "Tap to sign in"}
             </button>
           </>
         )}
       </div>
-    </main>
+      </main>
+    </>
   );
 }

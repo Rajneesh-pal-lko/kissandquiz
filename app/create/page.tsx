@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { AnimatedEmoji, Emoji, WhatsAppIcon } from "@/components/Emoji";
+import { confetti } from "@/components/fx";
+import { SiteHeader } from "@/components/SiteChrome";
 import { QUESTIONS, pickQuestions, pickReplacement } from "@/lib/questions";
+import { CATEGORY_UI, LETTERS } from "@/lib/ui";
 import { NAME_MAX, buildPlayUrl } from "@/lib/quizLink";
 import { load, remove, save } from "@/lib/storage";
 import { addMyQuiz, resultsUrl } from "@/lib/myQuizzes";
@@ -69,7 +73,23 @@ export default function CreatePage() {
     if (d) save(DRAFT_KEY, d);
   }, [d]);
 
-  if (!d) return <main className="wrap" />;
+  // Celebrate when the link is created (not when a saved share screen is reloaded).
+  const lastStep = useRef<Step | null>(null);
+  const step = d?.step ?? null;
+  useEffect(() => {
+    if (step === "share" && lastStep.current === "review") confetti();
+    // New step: start at the top (the review list is long on phones).
+    if (lastStep.current !== null && step !== lastStep.current) window.scrollTo({ top: 0 });
+    lastStep.current = step;
+  }, [step]);
+
+  if (!d)
+    return (
+      <>
+        <SiteHeader hideCta />
+        <main className="wrap" />
+      </>
+    );
 
   const total = d.qIds.length;
   const answeredCount = d.answers.filter((a) => a !== null).length;
@@ -227,170 +247,192 @@ export default function CreatePage() {
   }
 
   return (
-    <main className="wrap">
-      <header className="topbar">
-        <Link href="/" className="logo">
-          Kiss<span>And</span>Quiz
-        </Link>
-        <Link href="/games/how-well-do-you-know-me/" className="back">
-          About this game
-        </Link>
-      </header>
-
-      {d.step === "name" && (
-        <div className="card">
-          <h2>First, what's your name?</h2>
-          <input
-            type="text"
-            placeholder="e.g. Riya"
-            value={d.name}
-            maxLength={NAME_MAX}
-            onChange={(e) => update({ name: e.target.value, link: "" })}
-            onKeyDown={(e) => e.key === "Enter" && start()}
-            autoFocus
-            aria-label="Your name"
-          />
-          <button className="btn" onClick={start} disabled={!trimmedName}>
-            {answeredCount > 0 ? "Continue →" : "Start →"}
-          </button>
-          <p className="muted">Your partner will see this name. You'll answer {total} quick questions about yourself.</p>
-        </div>
-      )}
-
-      {d.step === "questions" && (() => {
-        const q = QUESTIONS[d.qIds[d.current]];
-        const selected = d.answers[d.current];
-        return (
-          <div className="card">
-            <div className="progress" aria-hidden>
-              <div style={{ width: `${(answeredCount / total) * 100}%` }} />
+    <>
+      <SiteHeader back={{ href: "/games/how-well-do-you-know-me/", label: "About this game" }} hideCta />
+      <main className="wrap flow">
+        {d.step === "name" && (
+          <div className="card flow-card slide-in">
+            <div className="name-hero">
+              <Emoji code="1f44b" size={72} eager />
             </div>
-            <div className="q-head">
-              <p className="muted">
-                Question {d.current + 1} of {total} · about you
-              </p>
-              <button className="link-btn" onClick={swap} title="Get a different question">
-                🔄 Swap question
+            <h2 className="center">First, what&apos;s your name?</h2>
+            <p className="muted center">Your partner will see it. Then you&apos;ll answer {total} quick questions about yourself.</p>
+            <input
+              type="text"
+              placeholder="e.g. Riya"
+              value={d.name}
+              maxLength={NAME_MAX}
+              onChange={(e) => update({ name: e.target.value, link: "" })}
+              onKeyDown={(e) => e.key === "Enter" && start()}
+              autoFocus
+              autoComplete="given-name"
+              aria-label="Your name"
+            />
+            <button className="btn" onClick={start} disabled={!trimmedName}>
+              {answeredCount > 0 ? "Continue →" : "Let's go →"}
+            </button>
+          </div>
+        )}
+
+        {d.step === "questions" &&
+          (() => {
+            const q = QUESTIONS[d.qIds[d.current]];
+            const cat = CATEGORY_UI[q.category];
+            const selected = d.answers[d.current];
+            return (
+              <div className="card flow-card">
+                <div className="q-top">
+                  <span className="q-count">
+                    {d.current + 1} <span>/ {total}</span>
+                  </span>
+                  <button className="chip-btn" onClick={swap} title="Get a different question">
+                    <Emoji code="1f504" size={18} className="spin" /> Swap question
+                  </button>
+                </div>
+                <div className="progress" aria-hidden>
+                  <div style={{ width: `${Math.max(4, (answeredCount / total) * 100)}%` }} />
+                </div>
+                <div key={d.qIds[d.current]} className="slide-in">
+                  <span className="q-cat">
+                    <Emoji code={cat.icon} size={18} /> {cat.label} · about you
+                  </span>
+                  <h2 className="q-title">{q.ask}</h2>
+                  <div className="options" role="radiogroup" aria-label={q.ask}>
+                    {q.options.map((opt, i) => (
+                      <button
+                        key={`${d.qIds[d.current]}-${i}`}
+                        className={selected === i ? "option selected" : "option"}
+                        role="radio"
+                        aria-checked={selected === i}
+                        onClick={() => choose(i)}
+                      >
+                        <span className="key" aria-hidden>
+                          {selected === i ? "✓" : LETTERS[i]}
+                        </span>
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="btn-row">
+                  <button className="btn ghost" onClick={back}>
+                    ← Back
+                  </button>
+                  <button className="btn" onClick={next} disabled={selected === null}>
+                    {fromReview && allAnswered ? "Done" : d.current + 1 === total ? "Review →" : "Next →"}
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+
+        {d.step === "review" && (
+          <div className="card flow-card slide-in">
+            <div className="name-hero">
+              <Emoji code="1f4cb" size={60} eager />
+            </div>
+            <h2 className="center">Check your answers</h2>
+            <p className="muted center">Tap any answer to change it. Your partner will try to guess these, {trimmedName}.</p>
+            <ol className="review-list">
+              {d.qIds.map((id, i) => {
+                const a = d.answers[i];
+                return (
+                  <li key={id}>
+                    <button
+                      className="review-item"
+                      onClick={() => {
+                        setFromReview(true);
+                        goTo(i);
+                      }}
+                    >
+                      <span className="rv-num">{i + 1}</span>
+                      <span className="review-q">{QUESTIONS[id].ask}</span>
+                      <span className="review-a">{a === null ? "Not answered" : QUESTIONS[id].options[a]}</span>
+                      <span className="review-edit">Edit</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+            <button className="btn" onClick={makeLink} disabled={!allAnswered || creating}>
+              {creating ? "Creating your link…" : "Create my quiz link"}
+              {!creating && <Emoji code="1f498" size={26} />}
+            </button>
+            <div className="btn-row">
+              <button className="btn ghost sm" onClick={() => update({ step: "name" })}>
+                Change name
               </button>
-            </div>
-            <h2>{q.ask}</h2>
-            <div className="options" role="radiogroup" aria-label={q.ask}>
-              {q.options.map((opt, i) => (
-                <button
-                  key={`${d.qIds[d.current]}-${i}`}
-                  className={selected === i ? "option selected" : "option"}
-                  role="radio"
-                  aria-checked={selected === i}
-                  onClick={() => choose(i)}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-            <div className="nav-row">
-              <button className="btn ghost" onClick={back}>
+              <button className="btn ghost sm" onClick={() => goTo(total - 1)}>
                 ← Back
               </button>
-              <button className="btn" onClick={next} disabled={selected === null}>
-                {fromReview && allAnswered ? "Done" : d.current + 1 === total ? "Review →" : "Next →"}
-              </button>
             </div>
           </div>
-        );
-      })()}
+        )}
 
-      {d.step === "review" && (
-        <div className="card">
-          <h2>Check your answers</h2>
-          <p className="muted">
-            Tap any answer to change it. Your partner will guess these, {trimmedName}.
-          </p>
-          <ol className="review-list">
-            {d.qIds.map((id, i) => {
-              const a = d.answers[i];
-              return (
-                <li key={id}>
-                  <button
-                    className="review-item"
-                    onClick={() => {
-                      setFromReview(true);
-                      goTo(i);
-                    }}
-                  >
-                    <span className="review-q">{QUESTIONS[id].ask}</span>
-                    <span className="review-a">{a === null ? "Not answered" : QUESTIONS[id].options[a]}</span>
-                    <span className="review-edit">Edit</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-          <button className="btn" onClick={makeLink} disabled={!allAnswered || creating}>
-            {creating ? "Creating your link…" : "Create my quiz link 💘"}
-          </button>
-          <div className="nav-row">
-            <button className="btn ghost" onClick={() => update({ step: "name" })}>
-              Change name
-            </button>
-            <button className="btn ghost" onClick={() => goTo(total - 1)}>
-              ← Back
-            </button>
-          </div>
-        </div>
-      )}
-
-      {d.step === "share" && (
-        <div className="card">
-          <h2>Your quiz is ready, {trimmedName}! 🎉</h2>
-          <p className="muted">Send this link to your partner. They'll guess your answers and see their score.</p>
-          <div className="linkbox">{d.link}</div>
-          <a
-            className="btn whatsapp"
-            href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Send on WhatsApp
-          </a>
-          {canShare && (
-            <button className="btn" onClick={nativeShare}>
-              Share to Instagram, Telegram…
-            </button>
-          )}
-          <button className="btn ghost" onClick={copy}>
-            {copied ? "Copied ✓" : "Copy link"}
-          </button>
-          {d.quizId && d.token ? (
-            <div className="private-box">
-              <p>
-                <strong>See your partner's score</strong> once they play.
-              </p>
-              <Link href="/results/" className="btn">
-                My results 💌
-              </Link>
-              <p className="muted">
-                Results are saved on this phone. To check from another phone, save this private link (don't share it):
-              </p>
-              <button className="link-btn" onClick={copyPrivate}>
-                {copiedPrivate ? "Private link copied ✓" : "Copy my private results link"}
+        {d.step === "share" && (
+          <div className="card flow-card slide-in">
+            <div className="share-hero">
+              <AnimatedEmoji name="party_popper" code="1f389" size={96} eager />
+              <h2>Your quiz is ready, {trimmedName}!</h2>
+              <p className="muted">Send this link to your partner. They&apos;ll guess your answers and see their score.</p>
+            </div>
+            <div className={d.quizId ? "linkbox" : "linkbox long"}>
+              <code>{d.link}</code>
+              <button className="chip-btn" onClick={copy}>
+                {copied ? "Copied ✓" : "Copy"}
+              </button>
+            </div>
+            <a
+              className="btn whatsapp"
+              href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <WhatsAppIcon /> Send on WhatsApp
+            </a>
+            {canShare && (
+              <button className="btn" onClick={nativeShare}>
+                Share to Instagram, Telegram…
+              </button>
+            )}
+            {d.quizId && d.token ? (
+              <div className="private-box">
+                <div className="ph">
+                  <Emoji code="1f48c" size={40} />
+                  <p>
+                    <strong>See your partner&apos;s score</strong>
+                    <br />
+                    <span className="muted">It shows up here once they play.</span>
+                  </p>
+                </div>
+                <Link href="/results/" className="btn plum">
+                  My results
+                </Link>
+                <p className="muted">
+                  Results are saved on this phone. To check from another phone, save this private link (don&apos;t share
+                  it):
+                </p>
+                <button className="link-btn" onClick={copyPrivate}>
+                  <Emoji code="1f512" size={18} /> {copiedPrivate ? "Private link copied ✓" : "Copy my private results link"}
+                </button>
+              </div>
+            ) : (
+              <p className="muted center tip">Tip: the link is saved on this phone, so you can come back here to copy it again.</p>
+            )}
+            <div className="btn-row">
+              <button className="btn ghost sm" onClick={() => update({ step: "review" })}>
+                {d.quizId ? "Edit (new link)" : "Edit answers"}
+              </button>
+              <button className="btn ghost sm" onClick={startOver}>
+                New quiz
               </button>
               <p className="muted">
                 Or <Link href="/account/">save it to a free account</Link> to see results on any phone.
               </p>
             </div>
-          ) : (
-            <p className="muted center tip">Tip: the link is saved on this phone, so you can come back here to copy it again.</p>
-          )}
-          <div className="nav-row">
-            <button className="btn ghost" onClick={() => update({ step: "review" })}>
-              {d.quizId ? "Edit (new link)" : "Edit answers"}
-            </button>
-            <button className="btn ghost" onClick={startOver}>
-              New quiz
-            </button>
           </div>
-        </div>
-      )}
-    </main>
+        )}
+      </main>
+    </>
   );
 }

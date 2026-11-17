@@ -4,7 +4,8 @@
 // Works from this phone's saved quizzes, or from a private link /results/?id=<id>#<token>.
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { Header } from "@/components/PlayGame";
+import { Emoji, WhatsAppIcon } from "@/components/Emoji";
+import { SiteHeader } from "@/components/SiteChrome";
 import { QUESTIONS, guessText } from "@/lib/questions";
 import { QUIZ_ID_RE, type Pair } from "@/lib/quizRules";
 import { addMyQuiz, listMyQuizzes, type MyQuiz } from "@/lib/myQuizzes";
@@ -50,37 +51,49 @@ function QuizResults({ q, open }: { q: MyQuiz; open: boolean }) {
   const shareText = `How well do you know me? 💘 Take my quiz and see your score: ${link}`;
 
   return (
-    <div className="card">
-      <div className="q-head">
-        <h2 style={{ margin: 0 }}>{title}</h2>
-        <button className="link-btn" onClick={fetchResults}>
-          ↻ Refresh
+    <div className="card slide-in">
+      <div className="result-head">
+        <h2>{title}</h2>
+        <button className="chip-btn" onClick={fetchResults}>
+          <Emoji code="1f504" size={16} className="spin" /> Refresh
         </button>
       </div>
       <p className="muted">Made {when(q.createdAt)}</p>
 
       {status.kind === "loading" && <p className="muted">Loading…</p>}
-      {status.kind === "error" && <p className="feedback bad">Couldn't load results. Check your internet and refresh.</p>}
+      {status.kind === "error" && <p className="feedback bad">Couldn&apos;t load results. Check your internet and refresh.</p>}
       {status.kind === "gone" && <p className="muted">This quiz has expired or was not found.</p>}
 
       {status.kind === "ok" && status.data.results.length === 0 && (
-        <>
-          <p>Your partner hasn't played yet. 🤞</p>
+        <div className="empty">
+          <Emoji code="1f91e" size={56} />
+          <p>
+            <strong>Your partner hasn&apos;t played yet.</strong>
+            <br />
+            <span className="muted">Nudge them with the link again.</span>
+          </p>
           <a
             className="btn whatsapp"
             href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
             target="_blank"
             rel="noopener noreferrer"
           >
-            Send the link again
+            <WhatsAppIcon /> Send the link again
           </a>
-        </>
+        </div>
       )}
 
       {status.kind === "ok" &&
         status.data.results.map((r, i) => (
           <div key={r.createdAt + i} className="result-block">
             <button className="review-item" onClick={() => setExpanded(expanded === i ? null : i)} aria-expanded={expanded === i}>
+              <span
+                className="mini-ring"
+                style={{ "--p": r.total ? Math.round((r.score / r.total) * 100) : 0 } as React.CSSProperties}
+                aria-hidden
+              >
+                <b>{r.score}</b>
+              </span>
               <span className="review-q">
                 {r.partner || "Your partner"} · {when(r.createdAt)}
               </span>
@@ -90,14 +103,14 @@ function QuizResults({ q, open }: { q: MyQuiz; open: boolean }) {
               <span className="review-edit">{expanded === i ? "Hide ▲" : "Answers ▼"}</span>
             </button>
             {expanded === i && (
-              <ol className="review-list">
+              <ol className="review-list slide-in">
                 {status.data.a.map(([qi, right], k) => {
                   const g = r.guesses[k];
                   const ok = g === right;
                   return (
                     <li key={qi} className="result-item">
                       <span className="review-q">
-                        {ok ? "✅" : "❌"} {guessText(QUESTIONS[qi], status.data.n)}
+                        <Emoji code={ok ? "2705" : "274c"} size={16} /> {guessText(QUESTIONS[qi], status.data.n)}
                       </span>
                       <span className="review-a">You: {QUESTIONS[qi].options[right]}</span>
                       {!ok && (
@@ -147,33 +160,46 @@ export default function ResultsPage() {
       .catch(() => {});
   }, []);
 
-  if (quizzes === null) return <main className="wrap" />;
+  if (quizzes === null)
+    return (
+      <>
+        <SiteHeader />
+        <main className="wrap" />
+      </>
+    );
 
   const ordered = focus ? [...quizzes].sort((x, y) => (x.id === focus ? -1 : y.id === focus ? 1 : 0)) : quizzes;
 
   return (
-    <main className="wrap">
-      <Header />
-      <h1>Your quiz results 💌</h1>
-      {ordered.length === 0 ? (
-        <div className="card">
-          <p>No quizzes on this phone yet.</p>
-          <p className="muted">
-            Results show up on the phone you made the quiz on, in your account if you're signed in, or through the
-            private results link you saved when you made it.
-          </p>
-          <Link href="/create/" className="btn">
-            Create my quiz
-          </Link>
-        </div>
-      ) : (
-        ordered.map((q, i) => <QuizResults key={q.id} q={q} open={i === 0} />)
-      )}
-      <p className="muted center tip">
-        <Link href="/create/">Make another quiz →</Link>
-        {" · "}
-        <Link href="/account/">{signedIn ? "My account" : "See results on any phone →"}</Link>
-      </p>
-    </main>
+    <>
+      <SiteHeader />
+      <main className="wrap flow">
+        <section className="flow-hero">
+          <Emoji code="1f48c" size={72} eager className="bob" />
+          <h1 className="rise">Your quiz results</h1>
+          <p className="lead rise d1">See how well your partner knows you, and every answer they missed.</p>
+        </section>
+        {ordered.length === 0 ? (
+          <div className="card empty slide-in">
+            <Emoji code="1f914" size={60} />
+            <h2>No quizzes on this phone yet</h2>
+            <p className="muted">
+              Results show up on the phone you made the quiz on, in your account if you&apos;re signed in, or through the
+              private results link you saved when you made it.
+            </p>
+            <Link href="/create/" className="btn">
+              Create my quiz
+            </Link>
+          </div>
+        ) : (
+          ordered.map((q, i) => <QuizResults key={q.id} q={q} open={i === 0} />)
+        )}
+        <p className="muted center tip">
+          <Link href="/create/">Make another quiz →</Link>
+          {" · "}
+          <Link href="/account/">{signedIn ? "My account" : "See results on any phone →"}</Link>
+        </p>
+      </main>
+    </>
   );
 }

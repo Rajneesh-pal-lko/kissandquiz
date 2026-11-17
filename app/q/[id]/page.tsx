@@ -3,6 +3,7 @@
 import type { Metadata } from "next";
 import { BrokenLink } from "@/components/PlayGame";
 import { QUIZ_ID_RE } from "@/lib/quizRules";
+import { SHARE_IMAGE } from "@/lib/seo";
 import { store, storeAvailable, type QuizDoc } from "@/lib/store";
 import ShortLinkGame from "./ShortLinkGame";
 
@@ -31,7 +32,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title: `${title} | KissAndQuiz`,
     description,
     robots: { index: false, follow: true }, // personal links: keep out of search
-    openGraph: { title, description, type: "website", siteName: "KissAndQuiz" },
+    openGraph: { title, description, type: "website", siteName: "KissAndQuiz", images: [SHARE_IMAGE] },
+    twitter: { card: "summary_large_image", title, description, images: [SHARE_IMAGE.url] },
   };
 }
 

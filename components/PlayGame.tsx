@@ -3,11 +3,16 @@
 // The partner's side of "How Well Do You Know Me?". Used by both the old long links
 // (/play/#…) and the new short links (/q/<id>/).
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { AnimatedEmoji, Emoji, WhatsAppIcon } from "@/components/Emoji";
+import { confetti, heartBurst } from "@/components/fx";
+import ScoreRing from "@/components/ScoreRing";
+import { SiteHeader } from "@/components/SiteChrome";
 import { QUESTIONS, guessText } from "@/lib/questions";
 import type { QuizData } from "@/lib/quizLink";
 import { NAME_MAX, scoreOf } from "@/lib/quizRules";
 import { load, save } from "@/lib/storage";
+import { CATEGORY_UI, LETTERS, scoreMood } from "@/lib/ui";
 
 type State = "intro" | "playing" | "done";
 
@@ -20,55 +25,47 @@ type Progress = {
   submitted: boolean;
 };
 
-function verdict(pct: number): string {
-  if (pct === 100) return "Soulmates. Nobody knows them better! 💍";
-  if (pct >= 80) return "You really pay attention. Cute! 😍";
-  if (pct >= 50) return "Not bad, but there's more to learn 😉";
-  if (pct >= 20) return "Hmm… time for a long date night 🙈";
-  return "Do you even know them?! 😂";
-}
-
+/** Kept for older imports; the site header now lives in SiteChrome. */
 export function Header() {
-  return (
-    <header className="topbar">
-      <Link href="/" className="logo">
-        Kiss<span>And</span>Quiz
-      </Link>
-    </header>
-  );
+  return <SiteHeader />;
 }
 
 export function BrokenLink({ reason = "broken" }: { reason?: "broken" | "expired" | "offline" }) {
   return (
-    <main className="wrap">
-      <Header />
-      <div className="card">
-        {reason === "offline" ? (
-          <>
-            <h2>Couldn't load this quiz 😕</h2>
-            <p className="muted">Check your internet and try again.</p>
-            <button className="btn" onClick={() => window.location.reload()}>
-              Try again
-            </button>
-          </>
-        ) : (
-          <>
-            <h2>{reason === "expired" ? "This quiz has expired 💔" : "This quiz link looks broken 💔"}</h2>
-            <p className="muted">
-              {reason === "expired"
-                ? "Quizzes are deleted after 6 months. Ask your partner to make a new one, or make your own."
-                : "WhatsApp sometimes cuts long links. Ask your partner to send the full link again, or make your own quiz."}
-            </p>
-            <Link href="/create/" className="btn">
-              Create my quiz
-            </Link>
-          </>
-        )}
-        <Link href="/" className="btn ghost">
-          See all games
-        </Link>
-      </div>
-    </main>
+    <>
+      <SiteHeader />
+      <main className="wrap flow">
+        <div className="card flow-card center slide-in">
+          <div className="name-hero">
+            <Emoji code={reason === "offline" ? "1f914" : "1f494"} size={80} eager />
+          </div>
+          {reason === "offline" ? (
+            <>
+              <h2>Couldn&apos;t load this quiz</h2>
+              <p className="muted">Check your internet and try again.</p>
+              <button className="btn" onClick={() => window.location.reload()}>
+                Try again
+              </button>
+            </>
+          ) : (
+            <>
+              <h2>{reason === "expired" ? "This quiz has expired" : "This quiz link looks broken"}</h2>
+              <p className="muted">
+                {reason === "expired"
+                  ? "Quizzes are deleted after 6 months. Ask your partner to make a new one, or make your own."
+                  : "WhatsApp sometimes cuts long links. Ask your partner to send the full link again, or make your own quiz."}
+              </p>
+              <Link href="/create/" className="btn">
+                Create my quiz
+              </Link>
+            </>
+          )}
+          <Link href="/" className="btn ghost">
+            See all games
+          </Link>
+        </div>
+      </main>
+    </>
   );
 }
 
@@ -93,6 +90,8 @@ export default function PlayGame({ quiz, progressKey, onFinish }: Props) {
   const [p, setP] = useState<Progress | null>(null);
   const [showAnswers, setShowAnswers] = useState(false);
   const [canShare, setCanShare] = useState(false);
+  const [bump, setBump] = useState(0);
+  const celebrated = useRef(false);
 
   // Resume if this tab was refreshed mid-quiz.
   useEffect(() => {
@@ -107,7 +106,30 @@ export default function PlayGame({ quiz, progressKey, onFinish }: Props) {
     if (p && p.state !== "intro") save(progressKey, p, "session");
   }, [p, progressKey]);
 
-  if (!p) return <main className="wrap" />;
+  // Confetti once when the score screen opens with a good score.
+  const isDone = p?.state === "done";
+  const goodScore = p ? scoreOf(quiz.a, p.guesses) / total >= 0.5 : false;
+  useEffect(() => {
+    if (!isDone) {
+      celebrated.current = false;
+      return;
+    }
+    if (celebrated.current) return;
+    celebrated.current = true;
+    window.scrollTo({ top: 0 });
+    if (goodScore) {
+      const t = window.setTimeout(() => confetti(), 900);
+      return () => window.clearTimeout(t);
+    }
+  }, [isDone, goodScore]);
+
+  if (!p)
+    return (
+      <>
+        <SiteHeader />
+        <main className="wrap" />
+      </>
+    );
 
   const name = quiz.n;
   const score = scoreOf(quiz.a, p.guesses);
@@ -116,45 +138,67 @@ export default function PlayGame({ quiz, progressKey, onFinish }: Props) {
 
   if (p.state === "intro") {
     return (
-      <main className="wrap">
-        <Header />
-        <h1>How well do you know {name}? 💘</h1>
-        <p className="lead">
-          {name} answered {total} {total === 1 ? "question" : "questions"} about themselves. Guess their answers and see
-          your score.
-        </p>
-        {onFinish && (
-          <input
-            type="text"
-            placeholder="Your name (optional)"
-            aria-label="Your name (optional)"
-            value={p.partner}
-            maxLength={NAME_MAX}
-            onChange={(e) => update({ partner: e.target.value })}
-          />
-        )}
-        <button className="btn" onClick={() => update({ state: "playing" })}>
-          Start the quiz
-        </button>
-        <p className="muted center tip">
-          No app, no login. Takes about 2 minutes.
-          {onFinish && ` ${name} will see your score.`}
-        </p>
-      </main>
+      <>
+        <SiteHeader hideCta />
+        <main className="wrap flow">
+          <section className="flow-hero">
+            <div className="intro-avatar rise">
+              <div className="initial" aria-hidden>
+                {Array.from(name)[0]?.toUpperCase() ?? "?"}
+              </div>
+              <AnimatedEmoji name="heart_with_arrow" code="1f498" size={64} eager />
+            </div>
+            <h1 className="rise d1">
+              How well do you know <span className="hl">{name}</span>?
+            </h1>
+            <p className="lead rise d2">
+              {name} answered {total} {total === 1 ? "question" : "questions"} about themselves. Guess their answers and
+              see your score.
+            </p>
+          </section>
+          <div className="card flow-card rise d3">
+            {onFinish && (
+              <input
+                type="text"
+                placeholder="Your name (optional)"
+                aria-label="Your name (optional)"
+                autoComplete="given-name"
+                value={p.partner}
+                maxLength={NAME_MAX}
+                onChange={(e) => update({ partner: e.target.value })}
+              />
+            )}
+            <button className="btn" onClick={() => update({ state: "playing" })}>
+              Start guessing →
+            </button>
+            <p className="muted center tip">
+              No app, no login. Takes about 2 minutes.
+              {onFinish && ` ${name} will see your score.`}
+            </p>
+          </div>
+        </main>
+      </>
     );
   }
 
   if (p.state === "playing") {
     const [qIndex, rightAnswer] = quiz.a[p.current];
     const q = QUESTIONS[qIndex];
+    const cat = CATEGORY_UI[q.category];
     const picked = p.guesses[p.current];
     const isLast = p.current + 1 === total;
+    const title = guessText(q, name);
 
-    function choose(i: number) {
+    function choose(i: number, el: HTMLElement) {
       if (!p || picked !== null) return; // One guess per question; locked after the reveal.
       const guesses = [...p.guesses];
       guesses[p.current] = i;
       update({ guesses });
+      if (i === rightAnswer) {
+        heartBurst(el, "+1");
+        setBump((b) => b + 1);
+      }
+      if (typeof navigator.vibrate === "function") navigator.vibrate(i === rightAnswer ? 18 : [12, 40, 12]);
     }
 
     function finish() {
@@ -164,62 +208,80 @@ export default function PlayGame({ quiz, progressKey, onFinish }: Props) {
     }
 
     return (
-      <main className="wrap">
-        <Header />
-        <div className="card">
-          <div className="progress" aria-hidden>
-            <div style={{ width: `${(answered / total) * 100}%` }} />
-          </div>
-          <p className="muted">
-            Question {p.current + 1} of {total} · Score {score}
-          </p>
-          <h2>{guessText(q, name)}</h2>
-          <div className="options" role="radiogroup" aria-label={guessText(q, name)}>
-            {q.options.map((opt, i) => {
-              let cls = "option";
-              if (picked !== null && i === rightAnswer) cls += " right";
-              else if (picked === i) cls += " wrong";
-              return (
-                <button
-                  key={`${qIndex}-${i}`}
-                  className={cls}
-                  role="radio"
-                  aria-checked={picked === i}
-                  aria-disabled={picked !== null}
-                  onClick={() => choose(i)}
-                >
-                  {opt}
-                  {picked !== null && i === rightAnswer && <span className="tag">{name}'s answer</span>}
-                </button>
-              );
-            })}
-          </div>
+      <>
+        <SiteHeader hideCta />
+        <main className="wrap flow">
+          <div className="card flow-card">
+            <div className="q-top">
+              <span className="q-count">
+                {p.current + 1} <span>/ {total}</span>
+              </span>
+              <span key={bump} className={bump ? "score-pill bump" : "score-pill"}>
+                <Emoji code="1f496" size={18} /> Score {score}
+              </span>
+            </div>
+            <div className="progress" aria-hidden>
+              <div style={{ width: `${Math.max(4, (answered / total) * 100)}%` }} />
+            </div>
+            <div key={qIndex} className="slide-in">
+              <span className="q-cat">
+                <Emoji code={cat.icon} size={18} /> {cat.label}
+              </span>
+              <h2 className="q-title">{title}</h2>
+              <div className="options" role="radiogroup" aria-label={title}>
+                {q.options.map((opt, i) => {
+                  let cls = "option";
+                  if (picked !== null && i === rightAnswer) cls += picked === i ? " right picked" : " right";
+                  else if (picked === i) cls += " wrong";
+                  const mark = picked !== null && i === rightAnswer ? "✓" : picked === i ? "✕" : LETTERS[i];
+                  return (
+                    <button
+                      key={`${qIndex}-${i}`}
+                      className={cls}
+                      role="radio"
+                      aria-checked={picked === i}
+                      aria-disabled={picked !== null}
+                      onClick={(e) => choose(i, e.currentTarget)}
+                    >
+                      <span className="key" aria-hidden>
+                        {mark}
+                      </span>
+                      {opt}
+                      {picked !== null && i === rightAnswer && <span className="tag">{name}&apos;s answer</span>}
+                    </button>
+                  );
+                })}
+              </div>
 
-          {picked !== null && (
-            <p className={picked === rightAnswer ? "feedback ok" : "feedback bad"} role="status">
-              {picked === rightAnswer ? "✅ Correct!" : `❌ Not quite. ${name} picked “${q.options[rightAnswer]}”.`}
-            </p>
-          )}
+              {picked !== null && (
+                <p className={picked === rightAnswer ? "feedback ok" : "feedback bad"} role="status">
+                  <Emoji code={picked === rightAnswer ? "1f60d" : "1f62c"} size={30} />
+                  {picked === rightAnswer ? "Correct! You know them." : `Not quite. ${name} picked “${q.options[rightAnswer]}”.`}
+                </p>
+              )}
+            </div>
 
-          <div className="nav-row">
-            <button className="btn ghost" onClick={() => update({ current: p.current - 1 })} disabled={p.current === 0}>
-              ← Back
-            </button>
-            <button
-              className="btn"
-              disabled={picked === null}
-              onClick={() => (isLast ? finish() : update({ current: p.current + 1 }))}
-            >
-              {isLast ? "See my score 🎉" : "Next →"}
-            </button>
+            <div className="btn-row">
+              <button className="btn ghost" onClick={() => update({ current: p.current - 1 })} disabled={p.current === 0}>
+                ← Back
+              </button>
+              <button
+                className="btn"
+                disabled={picked === null}
+                onClick={() => (isLast ? finish() : update({ current: p.current + 1 }))}
+              >
+                {isLast ? "See my score" : "Next →"}
+              </button>
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </>
     );
   }
 
   // done
   const pct = Math.round((score / total) * 100);
+  const mood = scoreMood(pct);
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const shareText = `I scored ${score}/${total} on ${name}'s couple quiz 💘 Make your own: ${origin}/create/`;
 
@@ -235,71 +297,85 @@ export default function PlayGame({ quiz, progressKey, onFinish }: Props) {
   }
 
   return (
-    <main className="wrap">
-      <Header />
-      <div className="card center">
-        <p className="muted">You know {name}…</p>
-        <div className="score">
-          {score}/{total}
+    <>
+      <SiteHeader />
+      <main className="wrap flow">
+        <div className="card flow-card center slide-in">
+          <p className="muted" style={{ margin: 0 }}>
+            You know {name}…
+          </p>
+          <ScoreRing score={score} total={total}>
+            <AnimatedEmoji name={mood.anim} code={mood.code} size={84} className="mood" />
+          </ScoreRing>
+          <h2 className="verdict">{mood.verdict}</h2>
+          {onFinish && p.submitted && (
+            <p className="saved-note">
+              <Emoji code="2705" size={18} /> {name} can see your score
+            </p>
+          )}
+          <a
+            className="btn whatsapp"
+            href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ marginTop: 14 }}
+          >
+            <WhatsAppIcon /> Send my score to {name}
+          </a>
+          {canShare && (
+            <button className="btn ghost" onClick={nativeShare}>
+              Share my score…
+            </button>
+          )}
+          <div className="loop-box">
+            <Emoji code="1f60f" size={46} />
+            <h3>Your turn now</h3>
+            <p>Make your own quiz and see how well {name} knows you.</p>
+            <Link href="/create/" className="btn light">
+              Make my quiz →
+            </Link>
+          </div>
         </div>
-        <h2>{verdict(pct)}</h2>
-        {onFinish && p.submitted && <p className="muted">✓ {name} can see your score.</p>}
-        <a
-          className="btn whatsapp"
-          href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Send my score to {name}
-        </a>
-        {canShare && (
-          <button className="btn" onClick={nativeShare}>
-            Share my score…
+
+        <div className="card">
+          <button className="link-btn full" onClick={() => setShowAnswers(!showAnswers)} aria-expanded={showAnswers}>
+            {showAnswers ? "Hide answers ▲" : "See all answers ▼"}
           </button>
-        )}
-        <Link href="/create/" className="btn ghost">
-          Now make your own quiz
-        </Link>
-      </div>
+          {showAnswers && (
+            <ol className="review-list slide-in">
+              {quiz.a.map(([qi, right], i) => {
+                const g = p.guesses[i];
+                const ok = g === right;
+                return (
+                  <li key={qi} className="result-item">
+                    <span className="review-q">
+                      <Emoji code={ok ? "2705" : "274c"} size={16} /> {guessText(QUESTIONS[qi], name)}
+                    </span>
+                    <span className="review-a">
+                      {name}: {QUESTIONS[qi].options[right]}
+                    </span>
+                    {!ok && <span className="muted">You guessed: {g === null ? "—" : QUESTIONS[qi].options[g]}</span>}
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+          <button
+            className="btn ghost"
+            onClick={() => {
+              setShowAnswers(false);
+              // Keep `submitted` so a replay is not saved as a second attempt.
+              update({ state: "playing", current: 0, guesses: quiz.a.map(() => null) });
+            }}
+          >
+            Play again
+          </button>
+        </div>
 
-      <div className="card">
-        <button className="link-btn full" onClick={() => setShowAnswers(!showAnswers)} aria-expanded={showAnswers}>
-          {showAnswers ? "Hide answers ▲" : "See all answers ▼"}
-        </button>
-        {showAnswers && (
-          <ol className="review-list">
-            {quiz.a.map(([qi, right], i) => {
-              const g = p.guesses[i];
-              const ok = g === right;
-              return (
-                <li key={qi} className="result-item">
-                  <span className="review-q">
-                    {ok ? "✅" : "❌"} {guessText(QUESTIONS[qi], name)}
-                  </span>
-                  <span className="review-a">
-                    {name}: {QUESTIONS[qi].options[right]}
-                  </span>
-                  {!ok && <span className="muted">You guessed: {g === null ? "—" : QUESTIONS[qi].options[g]}</span>}
-                </li>
-              );
-            })}
-          </ol>
-        )}
-        <button
-          className="btn ghost"
-          onClick={() => {
-            setShowAnswers(false);
-            // Keep `submitted` so a replay is not saved as a second attempt.
-            update({ state: "playing", current: 0, guesses: quiz.a.map(() => null) });
-          }}
-        >
-          Play again
-        </button>
-      </div>
-
-      <p className="muted center tip">
-        <Link href="/">More couple games →</Link>
-      </p>
-    </main>
+        <p className="muted center tip">
+          <Link href="/">More couple games →</Link>
+        </p>
+      </main>
+    </>
   );
 }

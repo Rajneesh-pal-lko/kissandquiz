@@ -4,7 +4,8 @@
 // Playing a quiz never needs an account.
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { Header } from "@/components/PlayGame";
+import { Emoji } from "@/components/Emoji";
+import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import { listMyQuizzes } from "@/lib/myQuizzes";
 import { NAME_MAX } from "@/lib/quizRules";
 
@@ -82,8 +83,11 @@ function SignInForm() {
 
   if (state === "sent") {
     return (
-      <div className="card">
-        <h2>Check your inbox 📬</h2>
+      <div className="card slide-in">
+        <div className="name-hero">
+          <Emoji code="1f48c" size={64} />
+        </div>
+        <h2 className="center">Check your inbox</h2>
         <p>
           We sent a sign-in link to <strong>{email.trim().toLowerCase()}</strong>. It works once, for 15 minutes.
         </p>
@@ -101,7 +105,7 @@ function SignInForm() {
   }
 
   return (
-    <form className="card" onSubmit={submit}>
+    <form className="card slide-in" onSubmit={submit}>
       <h2>Save your quizzes to an account</h2>
       <p className="muted">
         See your partner's scores on any phone and keep all your quizzes in one place. No password: we email you a
@@ -189,7 +193,7 @@ function Profile({ me, reload }: { me: Me; reload: () => void }) {
         {editing ? (
           <>
             <input type="text" aria-label="Your name" value={name} maxLength={NAME_MAX} onChange={(e) => setName(e.target.value)} />
-            <div className="nav-row">
+            <div className="btn-row">
               <button className="btn ghost" onClick={() => setEditing(false)}>
                 Cancel
               </button>
@@ -200,8 +204,10 @@ function Profile({ me, reload }: { me: Me; reload: () => void }) {
           </>
         ) : (
           <>
-            <div className="q-head">
-              <h2 style={{ margin: 0 }}>Hi, {me.user.name} 👋</h2>
+            <div className="result-head">
+              <h2>
+                Hi, {me.user.name} <Emoji code="1f44b" size={28} />
+              </h2>
               <button className="link-btn" onClick={() => setEditing(true)}>
                 Edit name
               </button>
@@ -235,7 +241,7 @@ function Profile({ me, reload }: { me: Me; reload: () => void }) {
         </Link>
       </div>
 
-      <div className="nav-row">
+      <div className="btn-row">
         <button className="btn ghost" onClick={logout} disabled={busy}>
           Log out
         </button>
@@ -272,10 +278,15 @@ export default function AccountPage() {
   }, [load]);
 
   return (
-    <main className="wrap">
-      <Header />
-      <h1>My account</h1>
-      {view.kind === "loading" && <p className="muted">Loading…</p>}
+    <>
+      <SiteHeader />
+      <main className="wrap flow">
+      <section className="flow-hero">
+        <Emoji code="1f512" size={64} eager className="bob" />
+        <h1 className="rise">My account</h1>
+        <p className="lead rise d1">Optional. Keep your quizzes and your partner&apos;s scores on any phone.</p>
+      </section>
+      {view.kind === "loading" && <p className="muted center">Loading…</p>}
       {view.kind === "error" && (
         <div className="card">
           <p>Couldn't load your account. Check your internet.</p>
@@ -288,8 +299,9 @@ export default function AccountPage() {
         (view.accounts ? (
           <SignInForm />
         ) : (
-          <div className="card">
-            <h2>Accounts are coming soon 💌</h2>
+          <div className="card empty">
+            <Emoji code="1f48c" size={60} />
+            <h2>Accounts are coming soon</h2>
             <p className="muted">For now, results are saved on the phone you made your quiz on.</p>
             <Link href="/results/" className="btn">
               My results
@@ -297,6 +309,8 @@ export default function AccountPage() {
           </div>
         ))}
       {view.kind === "in" && <Profile me={view.me} reload={load} />}
-    </main>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

@@ -8,6 +8,8 @@ export type Game = {
   title: string;
   tagline: string;
   emoji: string;
+  /** 3D emoji codepoint for the card art (file in /public/emoji/3d/). */
+  icon: string;
   status: GameStatus;
   /** Category label shown on the card. */
   category: "Quiz" | "Flirty" | "Deep talk" | "Date night" | "Classic" | "Daily";
@@ -23,6 +25,7 @@ export const GAMES: Game[] = [
     title: "How Well Do You Know Me?",
     tagline: "Answer 10 questions about yourself. Your partner guesses. See the score.",
     emoji: "💘",
+    icon: "1f498",
     status: "live",
     category: "Quiz",
     time: "2 min",
@@ -33,6 +36,7 @@ export const GAMES: Game[] = [
     title: "Would You Still Love Me If…",
     tagline: "Silly what-ifs. Your partner answers and you get a reaction card.",
     emoji: "🐛",
+    icon: "1f41b",
     status: "soon",
     category: "Flirty",
     time: "3 min",
@@ -43,6 +47,7 @@ export const GAMES: Game[] = [
     title: "Couple Ludo with Dares",
     tagline: "Classic Ludo for two, but every capture comes with a dare.",
     emoji: "🎲",
+    icon: "1f3b2",
     status: "soon",
     category: "Classic",
     time: "15 min",
@@ -53,6 +58,7 @@ export const GAMES: Game[] = [
     title: "Truth or Dare for Couples",
     tagline: "Pick your heat level, from cute to spicy.",
     emoji: "🔥",
+    icon: "1f525",
     status: "soon",
     category: "Flirty",
     time: "10 min",
@@ -63,6 +69,7 @@ export const GAMES: Game[] = [
     title: "Deep Questions Deck",
     tagline: "Three levels of questions that go deeper with every card.",
     emoji: "🌙",
+    icon: "1f319",
     status: "soon",
     category: "Deep talk",
     time: "20 min",
@@ -73,6 +80,7 @@ export const GAMES: Game[] = [
     title: "Date Night Scratch-off",
     tagline: "Scratch a card and get a surprise date idea for tonight.",
     emoji: "🎟️",
+    icon: "1f39f",
     status: "soon",
     category: "Date night",
     time: "1 min",
@@ -83,6 +91,7 @@ export const GAMES: Game[] = [
     title: "Daily Couple Question",
     tagline: "One question a day for both of you. Keep your streak alive.",
     emoji: "💬",
+    icon: "1f4ac",
     status: "soon",
     category: "Daily",
     time: "1 min a day",

@@ -1,7 +1,7 @@
 # KissAndQuiz — Project Context
 
 Living document. Update it at the end of every working session (see "Progress log").
-Last updated: 2026-11-17
+Last updated: 2026-11-18
 
 ---
 
@@ -33,12 +33,28 @@ To verify still: domain purchase, Instagram/YouTube/X handles (`kissandquiz`), t
 - **Hosting plan:** Vercel (free), with the custom domain kissandquiz.com. Raj already hosts happynewyear2027.in on Vercel (domain from GoDaddy).
 - **Commands:** `npm install`, `npm run dev` (localhost:3000), `npm run build` (output in `./out`).
 
+### Design system v2 "Blush & Plum" (2026-11-18, branch `redesign-v2`)
+- **Look:** warm cream background (`#fff6f3`) with three slow-drifting blurred blobs (blush, peach, lilac), plum-black text (`#2a0f1f`), brand pink `#e8336f` for accents and a deeper gradient (`#e62a6c → #b8134f`) for buttons so white text passes contrast. Chunky "press-down" buttons (Duolingo-style bottom edge), 24–32 px rounded cards, soft pink shadows. WhatsApp buttons are bright green with **dark** text (white on `#25d366` failed contrast).
+- **Fonts:** Bricolage Grotesque (headings) + Plus Jakarta Sans (body), self-hosted via `@fontsource-variable/*` (OFL, no Google Fonts request). Hindi names fall back to the system font.
+- **Icons:** Microsoft **Fluent Emoji 3D** (MIT) instead of the phone's own emoji, so every phone looks the same. Static: `public/emoji/3d/<codepoint>.webp` (256 px, ~5 KB each). Animated: `public/emoji/anim/<name>.webp` (converted from Microsoft's animated APNGs to animated WebP, 128–192 px, 50–150 KB each), used only for hero heart, share-screen party popper, score reactions and CTA bands. Licence file: `public/emoji/LICENSE-fluent-emoji.txt`. To add an icon: copy from the npm package `@lobehub/fluent-emoji-3d` (`assets/<codepoint>.webp`).
+- **Motion (all CSS, no animation library):** hero "live quiz" preview loop, floating emoji stickers, highlighted word underline, question slide-in, option pop / shake on wrong, heart burst + "+1" on right guesses, score ring count-up, heart confetti (`components/fx.ts`, dependency-free), sticky mobile CTA. Everything turns off with the phone's "reduce motion" setting.
+- **Rules:** keep motion purposeful and cheap (transform/opacity only), lazy-load images below the fold, keep tap targets ≥ 46 px and inputs ≥ 16 px font (no iOS zoom).
+
 ### Current files
 | Path | Purpose |
 | --- | --- |
-| `app/page.tsx` | Home page = **game store**: hero + "Play now" and "Coming soon" card grids, built from `lib/games.ts` |
-| `lib/games.ts` | Game catalog (slug, title, tagline, emoji, status live/soon, category, time, card colours). To launch a game: add its page under `app/games/<slug>/` and set status to `live` |
-| `app/games/how-well-do-you-know-me/page.tsx` | Game 1 intro page (old home content) with its own SEO title, links to `/create/` |
+| `app/page.tsx` | Home page = **game store**: hero (headline, CTAs, highlight chips, live quiz preview), How it works (3 steps), featured live game card, "Coming soon" rail (swipe on phones, grid on desktop), value props, final CTA band, sticky mobile CTA. Built from `lib/games.ts` |
+| `components/Emoji.tsx` | `<Emoji code>` (static 3D emoji), `<AnimatedEmoji name code>` (animated WebP, static fallback for reduce-motion), `<WhatsAppIcon>` |
+| `components/SiteChrome.tsx` | Sticky glass header (logo, My results, Account, "Play free") and footer (links incl. Privacy, emoji credit). `hideCta` hides "Play free" in the quiz flows |
+| `components/QuizPreview.tsx` | Pure-CSS looping demo of a partner guessing question #29 (hero art on home + game page) |
+| `components/StickyCta.tsx` | Bottom CTA bar on phones; appears after the hero CTA scrolls away |
+| `components/ScoreRing.tsx` | Animated score ring + count-up on the partner's score screen |
+| `components/fx.ts` | `heartBurst(el, "+1")` and `confetti()`; skipped for reduce-motion |
+| `lib/ui.ts` | Category labels + 3D icons, option letters, `scoreMood(pct)` (verdict + animated reaction) |
+| `lib/seo.ts` | `SHARE_IMAGE` for pages that set their own `openGraph` (Next.js drops the parent's image otherwise) |
+| `app/opengraph-image.jpg`, `app/icon.png`, `app/apple-icon.png` | Default share image (1200×630, 76 KB), favicon and home-screen icon (Fluent heart-with-arrow) |
+| `lib/games.ts` | Game catalog (slug, title, tagline, emoji, `icon` = 3D emoji codepoint, status live/soon, category, time, card colours). To launch a game: add its page under `app/games/<slug>/` and set status to `live` |
+| `app/games/how-well-do-you-know-me/page.tsx` | Game 1 landing page: hero + preview, How it works, "78 questions, 7 topics" chips (counted from the bank), FAQ with FAQPage JSON-LD, CTA band, sticky mobile CTA |
 | `app/create/page.tsx` | Creator flow: name → 10 questions (Back/Next, auto-advance on tap, 🔄 swap question) → review screen (tap to edit, change name) → share (WhatsApp, native share, copy, edit answers, new quiz). Draft saved in localStorage (`kq.create.v1`) so refresh doesn't lose work |
 | `app/create/layout.tsx` | Share/SEO metadata for `/create/` |
 | `app/play/page.tsx` | Old long links `/play/#…` (kept forever; no results saved). Uses `PlayGame`. Partner flow: intro → guess each question (one guess, locked after reveal, shows creator's answer) with Back/Next → score + verdict → "See all answers" review, send score on WhatsApp / native share, play again, make own quiz. Progress saved in sessionStorage per link; reloads on hash change |
@@ -110,7 +126,8 @@ Proposed order after Research 2:
 1. Test the current flows on two real phones (WhatsApp and Instagram in-app browsers, Chrome, Safari).
 2. Buy kissandquiz.com (+ kissnquiz.com redirect); reserve the `kissandquiz` handles.
 3. Hosting: **stay on Vercel Hobby for now** (decided 2026-11-17). Before turning on ads, affiliate links or payments, either upgrade to Vercel Pro or move to Cloudflare Pages. Keep code portable (no Vercel-only features) so a move stays cheap.
-4. Default share image (OG, 1200×630, under 300 KB) + **score-card image** the partner can share.
+0. **Raj: review the redesign** (branch `redesign-v2`, Vercel preview link) on phone and laptop → merge to `main` if happy.
+4. ~~Default share image~~ (done in the redesign, 76 KB) → still to do: **score-card image** the partner can share.
 5. **Raj: connect MongoDB** — add `MONGODB_URI` in Vercel env vars, allow `0.0.0.0/0` in Atlas Network Access, redeploy, test create → partner plays → results on two phones. Then **change the Atlas DB password** (it was shared in chat) and update the Vercel variable. Until then the site falls back to long links.
 5b. **Accounts go live after:** buy kissandquiz.com → create a Resend account → verify the domain (DNS records) → add `RESEND_API_KEY`, `EMAIL_FROM` (e.g. `KissAndQuiz <hello@kissandquiz.com>`), `SITE_URL=https://kissandquiz.com` in Vercel → redeploy. Until then `/account/` shows "coming soon". Add a real contact email to `/privacy/`.
 6. Free analytics (Cloudflare Web Analytics): share rate, partner completion, partners who make their own quiz.
@@ -123,6 +140,15 @@ Proposed order after Research 2:
 ---
 
 ## 7. Progress log
+### 2026-11-18 (session 5) — UI redesign v2
+- Raj asked for a professional, mobile-first redesign with animations and richer visuals than text + emoji. Researched 2026 UI trends (motion-first UI, tactile/"light skeuomorphic" buttons, bento/card grids, dopamine colours), couple apps (Paired's warm rebrand, partner-name framing), quiz-site patterns, Duolingo-style micro-interactions, and licences for 3D/animated emoji (Fluent Emoji = MIT; Noto animated = CC BY 4.0, not used).
+- Decision (Claude, for Raj to review): design system **"Blush & Plum"** (see section 3), Fluent 3D + animated emoji, Bricolage Grotesque + Plus Jakarta Sans, CSS-only motion with reduce-motion support. No new runtime libraries (only the two font packages).
+- Built on branch **`redesign-v2`** (not merged): every page restyled (home, game page, create, play, score, results, broken links, account, verify, privacy), sticky glass header + footer, sticky mobile CTA, default share image + favicon + Apple icon, FAQ + JSON-LD on the game page. Fixed contrast on pink and WhatsApp buttons. Partner sees no "Play free" button while playing (less distraction). Pages scroll to top on step change.
+- Merged the redesign with session 3's account feature (account/verify/privacy pages restyled; results page keeps the signed-in quiz list; share screen keeps "save it to a free account").
+- `metadataBase` now reads `SITE_URL` so share images get absolute URLs.
+- Tested: production build passes; full flow on 390 px and 360 px phones (create → short link → partner plays → score → creator results), long-link fallback, Hindi name, broken/expired links, account sign-in with dev link, privacy page. No console errors except the expected 401 from `/api/me/` when signed out. Not yet checked on real phones or inside WhatsApp/Instagram in-app browsers.
+- Next: Raj reviews the preview and merges; then score-card image, analytics, Love Calculator/FLAMES.
+
 ### 2026-11-18 (session 4)
 - Live at https://kissandquiz-mu.vercel.app with MongoDB + Resend configured: `/api/me/` returns `{"error":"signed_out","accounts":true}`.
 - Test email setup: Resend domain happynewyear2027.in (sending verified; "receiving" MX not needed, keep it off), new send-only API key, `EMAIL_FROM=KissAndQuiz <login@happynewyear2027.in>`, `SITE_URL=https://kissandquiz-mu.vercel.app`. Switch to kissandquiz.com once bought.
