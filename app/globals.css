@@ -1014,9 +1014,27 @@ input[type="text"]:focus {
   }
 }
 
-/* ---------- Featured game ---------- */
-.feature {
+/* ---------- Featured game + other live games (bento) ----------
+   Desktop: the featured game spans 2 of 3 columns, other live games fill the rest.
+   Each card switches its own layout with a container query, so it looks right at any width. */
+.play-grid {
   display: grid;
+  gap: 18px;
+}
+
+@media (min-width: 980px) {
+  .play-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .play-grid > .feature:not(.mini) {
+    grid-column: span 2;
+  }
+}
+
+.feature {
+  container-type: inline-size;
+  display: block;
   border-radius: var(--r-xl);
   overflow: hidden;
   color: #fff;
@@ -1030,8 +1048,18 @@ input[type="text"]:focus {
   transform: translateY(-4px);
 }
 
-@media (min-width: 760px) {
-  .feature {
+.feature:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 3px;
+}
+
+.feature-in {
+  display: grid;
+  height: 100%;
+}
+
+@container (min-width: 620px) {
+  .feature-in {
     grid-template-columns: 0.9fr 1.1fr;
     align-items: center;
   }
@@ -1091,7 +1119,7 @@ input[type="text"]:focus {
   padding: 4px 24px 28px;
 }
 
-@media (min-width: 760px) {
+@container (min-width: 620px) {
   .feature-body {
     padding: 36px 40px 36px 8px;
   }
@@ -1099,9 +1127,129 @@ input[type="text"]:focus {
 
 .feature-body h3 {
   color: #fff;
-  font-size: clamp(28px, 6vw, 40px);
+  font-size: clamp(27px, 7.5cqi, 40px);
   font-weight: 800;
   margin: 12px 0 8px;
+}
+
+/* Second-tier live game: same weight as the featured card, its own violet-plum colour */
+.feature.mini {
+  background: radial-gradient(110% 80% at 100% 0%, rgba(255, 201, 77, 0.28), transparent 45%),
+    radial-gradient(90% 80% at 0% 100%, rgba(255, 122, 162, 0.38), transparent 55%),
+    linear-gradient(150deg, #6b46d9 0%, #4f2bb0 55%, #33187a 100%);
+}
+
+.feature.mini .feature-in {
+  grid-template-rows: 1fr auto;
+}
+
+.feature.mini .feature-body {
+  padding-top: 18px;
+}
+
+@container (min-width: 620px) {
+  .feature.mini .feature-in {
+    grid-template-rows: none;
+  }
+
+  .feature.mini .feature-body {
+    padding-top: 36px;
+  }
+}
+
+.mini-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 34px 22px 8px;
+}
+
+.mini-wyr {
+  position: relative;
+  display: grid;
+  width: min(100%, 300px);
+  transform: rotate(-2deg);
+  transition: transform 0.4s var(--ease-spring);
+}
+
+.feature.mini:hover .mini-wyr {
+  transform: rotate(0deg) scale(1.03);
+}
+
+.mw-q {
+  margin: 0 0 10px 4px;
+  font-family: var(--font-display);
+  font-weight: 750;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.mw-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 14px 14px 16px;
+  border-radius: 18px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 750;
+  font-size: 15px;
+  line-height: 1.25;
+  box-shadow: 0 4px 0 rgba(30, 8, 80, 0.28);
+}
+
+.mw-opt.b {
+  background: #f1ecff;
+}
+
+.mw-opt i {
+  flex: none;
+  font-style: normal;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--brand-strong);
+  white-space: nowrap;
+}
+
+.mw-opt i.g {
+  background: #fff1c4;
+  color: #6b4200;
+}
+
+.mw-or {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  width: 38px;
+  height: 38px;
+  margin: -8px 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--sun);
+  color: var(--ink);
+  border: 3px solid #5a35c4;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.mini-wyr .mw-sticker {
+  position: absolute;
+  top: -24px;
+  right: -4px;
+  transform: rotate(12deg);
+  filter: drop-shadow(0 10px 14px rgba(30, 8, 80, 0.35));
+}
+
+.pill.new {
+  background: var(--sun);
+  color: var(--ink);
+  border: 1px solid transparent;
 }
 
 .feature-body p {
@@ -2996,23 +3144,6 @@ a.review-item {
   }
 }
 
-/* Live (non-featured) game cards on the home page */
-.live-grid {
-  display: grid;
-  gap: 16px;
-  margin-top: 18px;
-}
-
-@media (min-width: 640px) {
-  .live-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.badge.live {
-  color: var(--brand-strong);
-}
-
 .sample-list {
   margin: 0;
   padding-left: 22px;
@@ -3024,6 +3155,24 @@ a.review-item {
 
 .sample-list strong {
   color: var(--ink);
+}
+
+/* Wide screens: two columns keep lines short and readable */
+@media (min-width: 900px) {
+  .sample-list {
+    display: block;
+    columns: 2;
+    column-gap: 48px;
+  }
+
+  .sample-list li {
+    break-inside: avoid;
+    margin-bottom: 10px;
+  }
+
+  .step-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

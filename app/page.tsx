@@ -8,45 +8,67 @@ import { FEATURED_SLUG, GAMES, gameHref, type Game } from "@/lib/games";
 function FeaturedGame({ game }: { game: Game }) {
   return (
     <Link href={gameHref(game)} className="feature">
-      <div className="feature-art">
-        <AnimatedEmoji name="heart_with_arrow" code={game.icon} size={150} className="main" />
-        <Emoji code="1f970" size={50} className="float f1" />
-        <Emoji code="2753" size={40} className="float f3" />
-        <Emoji code="1f3c6" size={46} className="float f2" />
-      </div>
-      <div className="feature-body">
-        <div className="meta-row">
-          <span className="pill light">{game.category}</span>
-          <span className="pill light">{game.time}</span>
-          <span className="pill light">10 questions</span>
+      <div className="feature-in">
+        <div className="feature-art">
+          <AnimatedEmoji name="heart_with_arrow" code={game.icon} size={150} className="main" />
+          <Emoji code="1f970" size={50} className="float f1" />
+          <Emoji code="2753" size={40} className="float f3" />
+          <Emoji code="1f3c6" size={46} className="float f2" />
         </div>
-        <h3>{game.title}</h3>
-        <p>{game.tagline}</p>
-        <span className="btn light auto">Play now →</span>
+        <div className="feature-body">
+          <div className="meta-row">
+            <span className="pill light">{game.category}</span>
+            <span className="pill light">{game.time}</span>
+            <span className="pill light">10 questions</span>
+          </div>
+          <h3>{game.title}</h3>
+          <p>{game.tagline}</p>
+          <span className="btn light auto">Play now →</span>
+        </div>
       </div>
     </Link>
   );
 }
 
-function LiveGameCard({ game }: { game: Game }) {
-  return (
-    <Link
-      href={gameHref(game)}
-      className="game-card"
-      style={{ "--a": game.colors[0], "--b": game.colors[1] } as React.CSSProperties}
-    >
-      <div className="game-art">
-        <Emoji code={game.icon} size={76} />
-        <span className="badge live">New · Play now</span>
+/** Card art that shows how each live game plays. Falls back to the game's 3D emoji. */
+function MiniArt({ game }: { game: Game }) {
+  if (game.slug === "would-you-rather") {
+    // Question #40 from lib/wyrQuestions.ts: Riya's pick and Aarav's guess.
+    return (
+      <div className="mini-wyr">
+        <Emoji code="1f914" size={58} className="mw-sticker" />
+        <span className="mw-q">Would you rather…</span>
+        <span className="mw-opt">
+          Ghar ka khana forever <i>Riya</i>
+        </span>
+        <span className="mw-or">OR</span>
+        <span className="mw-opt b">
+          Restaurant food every night <i className="g">Aarav&apos;s guess</i>
+        </span>
       </div>
-      <div className="game-body">
-        <div className="game-meta">
-          <span>{game.category}</span>
-          <span aria-hidden>·</span>
-          <span>{game.time}</span>
+    );
+  }
+  return <Emoji code={game.icon} size={110} />;
+}
+
+/** A live game next to the featured one: same weight, its own colour. */
+function MiniGame({ game }: { game: Game }) {
+  return (
+    <Link href={gameHref(game)} className="feature mini">
+      <div className="feature-in">
+        <div className="mini-art" aria-hidden>
+          <MiniArt game={game} />
         </div>
-        <h3>{game.title}</h3>
-        <p>{game.tagline}</p>
+        <div className="feature-body">
+          <div className="meta-row">
+            <span className="pill new">New</span>
+            <span className="pill light">{game.category}</span>
+            <span className="pill light">{game.time}</span>
+          </div>
+          <h3>{game.title}</h3>
+          <p>{game.tagline}</p>
+          <span className="btn light auto">Play now →</span>
+        </div>
       </div>
     </Link>
   );
@@ -157,14 +179,12 @@ export default function Home() {
               Play now
             </h2>
           </div>
-          {featured && <FeaturedGame game={featured} />}
-          {live.length > 0 && (
-            <div className="live-grid">
-              {live.map((g) => (
-                <LiveGameCard key={g.slug} game={g} />
-              ))}
-            </div>
-          )}
+          <div className="play-grid">
+            {featured && <FeaturedGame game={featured} />}
+            {live.map((g) => (
+              <MiniGame key={g.slug} game={g} />
+            ))}
+          </div>
         </section>
 
         <section className="section" aria-labelledby="soon-title">
