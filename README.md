@@ -1,6 +1,7 @@
 # KissAndQuiz
 
-Free couple games, played over a link. First game: **"How Well Do You Know Me?"**
+Free couple games, played over a link. Live games: **"How Well Do You Know Me?"** and
+**"Would You Rather for Couples"** (`/games/would-you-rather/`, game links `/w/<id>/`).
 
 1. You answer 10 questions about yourself.
 2. The site gives you a link to send to your partner.
@@ -36,6 +37,8 @@ Without `MONGODB_URI` in production, the site still works: quiz links fall back 
 - Both auto-delete after 180 days (TTL index on `createdAt`, created automatically).
 - Accounts (optional, creators only): `users` `{ _id, email (unique), name, createdAt, lastLoginAt }`, `loginTokens` (hashed, 15-min TTL), `sessions` (hashed, 30-day TTL, httpOnly cookie `kq_session`). Quizzes get `ownerUserId` when made while signed in or claimed from the phone. Deleting an account deletes its quizzes and results.
 - The creator's secret token is kept only on their phone; the database stores its SHA-256 hash.
+- Two-player reveal games (Would You Rather; later Most Likely To, Never Have I Ever, Yes / No / Maybe): `games` `{ _id: shortId, type, q, players: [{ name, tokenHash, answers: [{pick, guess} | null], joinedAt, finishedAt?, score? }], createdAt, joinedAt?, finishedAt? }`, 180-day TTL. `rateLimits` holds hashed-IP request counters (2-hour TTL).
+- Preview deployments need their own `MONGODB_URI` (Vercel → Environment Variables → Preview); use `MONGODB_DB=kissandquiz_preview` to keep test data apart.
 
 ## Project layout
 
@@ -45,6 +48,9 @@ Without `MONGODB_URI` in production, the site still works: quiz links fall back 
 | `app/create/page.tsx` | Make a quiz and get the share link |
 | `app/play/page.tsx` | Partner plays the quiz and sees the score |
 | `lib/questions.ts` | Question bank (add new questions at the end only) |
+| `lib/reveal/` | Shared engine for two-player "answer privately → reveal" games (config, rules, server-side `viewFor` privacy filter) |
+| `lib/wyrQuestions.ts` | Would You Rather bank (append-only, stable indexes) |
+| `components/reveal/` | Creator flow, game screen, round reveal, final screen |
 | `lib/quizLink.ts` | Encodes/decodes a quiz into the link |
 
 ## Notes
