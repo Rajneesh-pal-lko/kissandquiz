@@ -27,12 +27,21 @@ export default function PrivacyPage() {
             they did.
           </li>
           <li>
+            <strong>Two-player games (like Would You Rather):</strong> both players&apos; first names, picks and guesses,
+            and the scores, so you can both see the reveal. Each player gets a private key on their phone; we store only
+            a scrambled (hashed) copy of it.
+          </li>
+          <li>
+            <strong>Spam protection:</strong> a scrambled (hashed) version of your IP address when you start or join a
+            game, kept for up to 2 hours.
+          </li>
+          <li>
             <strong>Accounts (optional):</strong> your name and email, so you can sign in on any phone. One account per
             email.
           </li>
           <li>
-            <strong>On your phone:</strong> your quiz drafts and the private keys to your quizzes' results, in your
-            browser's storage.
+            <strong>On your phone:</strong> your quiz and game drafts, the private keys to your quizzes&apos; results and
+            your games, in your browser&apos;s storage.
           </li>
         </ul>
 
@@ -40,12 +49,13 @@ export default function PrivacyPage() {
         <ul>
           <li>No passwords. You sign in with a one-time email link.</li>
           <li>We don't sell your data or send you marketing emails without asking first.</li>
-          <li>Playing a quiz never needs an account or an email.</li>
+          <li>Playing a quiz or a game never needs an account or an email.</li>
+          <li>Your partner only sees your answers in a game after answering the same question themselves.</li>
         </ul>
 
         <h2>How long we keep it</h2>
         <ul>
-          <li>Quizzes and results are deleted automatically after 6 months.</li>
+          <li>Quizzes, results and two-player games are deleted automatically after 6 months.</li>
           <li>Sign-in links expire after 15 minutes; sign-ins last 30 days.</li>
           <li>Your account stays until you delete it.</li>
         </ul>
@@ -54,7 +64,7 @@ export default function PrivacyPage() {
         <ul>
           <li>
             Delete your account any time from <Link href="/account/">My account</Link>. This also deletes the quizzes
-            saved in it and their results.
+            saved in it and their results. Two-player games are not linked to accounts; they are deleted after 6 months.
           </li>
           <li>Questions or requests: contact the site owner (contact email coming soon).</li>
         </ul>

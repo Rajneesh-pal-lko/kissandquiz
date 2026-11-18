@@ -3,7 +3,7 @@ import { AnimatedEmoji, Emoji } from "@/components/Emoji";
 import QuizPreview from "@/components/QuizPreview";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import StickyCta from "@/components/StickyCta";
-import { GAMES, gameHref, type Game } from "@/lib/games";
+import { FEATURED_SLUG, GAMES, gameHref, type Game } from "@/lib/games";
 
 function FeaturedGame({ game }: { game: Game }) {
   return (
@@ -23,6 +23,30 @@ function FeaturedGame({ game }: { game: Game }) {
         <h3>{game.title}</h3>
         <p>{game.tagline}</p>
         <span className="btn light auto">Play now →</span>
+      </div>
+    </Link>
+  );
+}
+
+function LiveGameCard({ game }: { game: Game }) {
+  return (
+    <Link
+      href={gameHref(game)}
+      className="game-card"
+      style={{ "--a": game.colors[0], "--b": game.colors[1] } as React.CSSProperties}
+    >
+      <div className="game-art">
+        <Emoji code={game.icon} size={76} />
+        <span className="badge live">New · Play now</span>
+      </div>
+      <div className="game-body">
+        <div className="game-meta">
+          <span>{game.category}</span>
+          <span aria-hidden>·</span>
+          <span>{game.time}</span>
+        </div>
+        <h3>{game.title}</h3>
+        <p>{game.tagline}</p>
       </div>
     </Link>
   );
@@ -53,7 +77,8 @@ function GameCard({ game }: { game: Game }) {
 }
 
 export default function Home() {
-  const live = GAMES.filter((g) => g.status === "live");
+  const featured = GAMES.find((g) => g.slug === FEATURED_SLUG && g.status === "live");
+  const live = GAMES.filter((g) => g.status === "live" && g.slug !== FEATURED_SLUG);
   const soon = GAMES.filter((g) => g.status === "soon");
 
   return (
@@ -132,9 +157,14 @@ export default function Home() {
               Play now
             </h2>
           </div>
-          {live.map((g) => (
-            <FeaturedGame key={g.slug} game={g} />
-          ))}
+          {featured && <FeaturedGame game={featured} />}
+          {live.length > 0 && (
+            <div className="live-grid">
+              {live.map((g) => (
+                <LiveGameCard key={g.slug} game={g} />
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="section" aria-labelledby="soon-title">

@@ -1,5 +1,6 @@
 // Catalog of all KissAndQuiz games shown on the home page (the "store").
 // To launch a game: build its page under app/games/<slug>/ and set status to "live".
+// The first game (How Well Do You Know Me) is the featured one on the home page.
 
 export type GameStatus = "live" | "soon";
 
@@ -30,6 +31,17 @@ export const GAMES: Game[] = [
     category: "Quiz",
     time: "2 min",
     colors: ["#ff7aa2", "#e8336f"],
+  },
+  {
+    slug: "would-you-rather",
+    title: "Would You Rather for Couples",
+    tagline: "Pick your answer, guess your partner's, and see who knows who better.",
+    emoji: "🤔",
+    icon: "1f914",
+    status: "live",
+    category: "Classic",
+    time: "3 min",
+    colors: ["#b9a3ff", "#e8336f"],
   },
   {
     slug: "would-you-still-love-me",
@@ -98,6 +110,9 @@ export const GAMES: Game[] = [
     colors: ["#ffd36b", "#f59f00"],
   },
 ];
+
+/** Slug of the big featured card on the home page. */
+export const FEATURED_SLUG = "how-well-do-you-know-me";
 
 export function gameHref(game: Game): string {
   return `/games/${game.slug}/`;

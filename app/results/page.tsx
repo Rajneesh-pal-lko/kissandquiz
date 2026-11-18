@@ -9,6 +9,8 @@ import { SiteHeader } from "@/components/SiteChrome";
 import { QUESTIONS, guessText } from "@/lib/questions";
 import { QUIZ_ID_RE, type Pair } from "@/lib/quizRules";
 import { addMyQuiz, listMyQuizzes, type MyQuiz } from "@/lib/myQuizzes";
+import { configFor } from "@/lib/reveal/configs";
+import { listMyGames, type MyGame } from "@/lib/reveal/myGames";
 
 type Result = { partner: string | null; guesses: (number | null)[]; score: number; total: number; createdAt: string };
 type Loaded = { n: string; a: Pair[]; results: Result[] };
@@ -127,8 +129,43 @@ function QuizResults({ q, open }: { q: MyQuiz; open: boolean }) {
   );
 }
 
+/** Two-player games (Would You Rather, …) this phone made or joined. */
+function MyGames({ games }: { games: MyGame[] }) {
+  return (
+    <div className="card slide-in">
+      <div className="result-head">
+        <h2>Your Would You Rather games</h2>
+      </div>
+      <p className="muted">Open a game to see the reveal, or how far your partner has got.</p>
+      <ol className="review-list">
+        {games.map((g) => {
+          const cfg = configFor(g.type);
+          if (!cfg) return null;
+          return (
+            <li key={g.id}>
+              <Link className="review-item" href={`${cfg.linkPrefix}${g.id}/`}>
+                <span className="rv-num">
+                  <Emoji code="1f914" size={18} />
+                </span>
+                <span className="review-q">
+                  {cfg.title} {g.partner ? `with ${g.partner}` : g.role === 0 ? "(waiting for your partner)" : ""}
+                </span>
+                <span className="review-a">
+                  {g.role === 0 ? "You started it" : "You joined"} · {when(g.createdAt)}
+                </span>
+                <span className="review-edit">Open →</span>
+              </Link>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
 export default function ResultsPage() {
   const [quizzes, setQuizzes] = useState<MyQuiz[] | null>(null);
+  const [games, setGames] = useState<MyGame[]>([]);
   const [focus, setFocus] = useState<string | null>(null);
   const [signedIn, setSignedIn] = useState(false);
 
@@ -145,6 +182,7 @@ export default function ResultsPage() {
     }
     const local = listMyQuizzes();
     setQuizzes(local);
+    setGames(listMyGames());
     // Signed in? Also show quizzes saved in the account (e.g. made on another phone).
     fetch("/api/me/", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
@@ -194,6 +232,7 @@ export default function ResultsPage() {
         ) : (
           ordered.map((q, i) => <QuizResults key={q.id} q={q} open={i === 0} />)
         )}
+        {games.length > 0 && <MyGames games={games} />}
         <p className="muted center tip">
           <Link href="/create/">Make another quiz →</Link>
           {" · "}

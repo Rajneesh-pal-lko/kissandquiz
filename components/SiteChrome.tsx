@@ -59,6 +59,7 @@ export function SiteFooter() {
         <nav className="footer-links" aria-label="Footer">
           <Link href="/">All games</Link>
           <Link href="/games/how-well-do-you-know-me/">Couple quiz</Link>
+          <Link href="/games/would-you-rather/">Would You Rather</Link>
           <Link href="/create/">Create a quiz</Link>
           <Link href="/results/">My results</Link>
           <Link href="/account/">My account</Link>
