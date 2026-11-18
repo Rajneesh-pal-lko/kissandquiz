@@ -1,7 +1,7 @@
 # KissAndQuiz — Project Context
 
 Living document. Update it at the end of every working session (see "Progress log").
-Last updated: 2026-11-18 (session 16)
+Last updated: 2026-11-18 (session 17)
 
 ---
 
@@ -87,7 +87,7 @@ To verify still: domain purchase, Instagram/YouTube/X handles (`kissandquiz`), t
 | `app/w/[id]/page.tsx` | Game link, server-rendered preview "Riya wants to play Would You Rather with you 💞", noindex. Broken/expired/offline screens |
 | `components/reveal/` | `CreateGame` (creator flow), `RevealGame` (join, "Are you {A}?" guard, rounds, creator waiting/progress with 10 s polling, "game full", private-link restore), `RoundReveal` (both picks, both guesses ✅/❌, heart burst + confetti on match), `FinalResult` (winner/tie, X/10 lines, same-pick count, WhatsApp, rematch, all answers), `Choices` (two big option cards + OR badge), `WyrPreview` (landing art) |
 
-### Kiss Wallet (built 2026-11-18, session 16; on branch **`feat/kiss-wallet`**, commit `9f9e89a`, **not merged**)
+### Kiss Wallet (built 2026-11-18, session 16; on branch **`feat/kiss-wallet`**, commits `9f9e89a` + `5544a44` (session 17 account/header fixes), **not merged**)
 Rules: **`docs/KISS_WALLET_RULES.md`** (standard rules A1–G2 with reasons and sources); every number lives in `lib/wallet/rules.ts` (change both together).
 | Path | Purpose |
 | --- | --- |
@@ -260,7 +260,8 @@ Name options: **Earn Kisses** (clear, global; Claude's pick for the game title/U
 Decisions for Raj: (1) name, (2) build the MVP now (before Most Likely To) or after the known games, (3) OK with the rate card + guard rails.
 
 ## 6. Next steps
-**Session 16 (current, priority order):** 1) **Raj:** open the Vercel preview of `feat/kiss-wallet` on two phones (one inside WhatsApp): make a Would You Rather game for 2 kisses → partner plays → both see the kiss card → open `/wallet/` → "Got kisses" / Gift / Forgive → private wallet link on the other browser; also a couple quiz with a stake. Preview needs `MONGODB_URI` for Preview. 2) Raj approves → merge to `main`. 3) Decide the open questions (18+ tick? home page "Kiss Wallet" hero/section?). 4) Then: home page + game pages themed around the wallet ("Play for kisses"), share-card image "Riya owes Raj 23 kisses", Most Likely To on the reveal engine (it gets kisses for free via `settleGame`). 5) Still open: buy kissandquiz.com, rotate the Atlas password, Search Console.
+**Session 17 (current, priority order):** 0) **Raj, Vercel → Settings → Environment Variables → Preview:** make sure `MONGODB_URI`, `RESEND_API_KEY` and `EMAIL_FROM` are ticked for **Preview** (the account page on a preview now names any that are missing). `SITE_URL` can stay as it is: previews ignore it now. Redeploy the branch, then sign in on the preview and open the emailed link **in the same browser** (cookies belong to one browser and one address). Then do the session 16 test below.
+**Session 16 (priority order):** 1) **Raj:** open the Vercel preview of `feat/kiss-wallet` on two phones (one inside WhatsApp): make a Would You Rather game for 2 kisses → partner plays → both see the kiss card → open `/wallet/` → "Got kisses" / Gift / Forgive → private wallet link on the other browser; also a couple quiz with a stake. Preview needs `MONGODB_URI` for Preview. 2) Raj approves → merge to `main`. 3) Decide the open questions (18+ tick? home page "Kiss Wallet" hero/section?). 4) Then: home page + game pages themed around the wallet ("Play for kisses"), share-card image "Riya owes Raj 23 kisses", Most Likely To on the reveal engine (it gets kisses for free via `settleGame`). 5) Still open: buy kissandquiz.com, rotate the Atlas password, Search Console.
 
 **Session 15 (proposed, waiting for Raj):** 0) Raj decides on Earn Kisses: name, build now vs. after Most Likely To, rate card + guard rails. 1) If "now": build the Earn Kisses MVP (room `/k/<id>/`, Ask & Earn, approve/objection, wallet, Pay when we meet, rate card, share text), then Most Likely To. If "later": Most Likely To → Never Have I Ever → Truth or Dare, and Earn Kisses in January for Kiss Day (Feb 13). 2) Session 14 items still open: real-phone test of Would You Rather, rotate the Atlas password, buy kissandquiz.com.
 
@@ -287,6 +288,14 @@ Proposed order after Research 2:
 ---
 
 ## 7. Progress log
+### 2026-11-18 (session 17) — Preview accounts fixed + Account link back on phones
+- Raj: on the preview, the account either seems to use the old account or shows "Accounts are coming soon".
+- Found in code: (1) `siteOrigin()` always used `SITE_URL` (production address), so a sign-in started on a preview emailed a link to the live site; it signed in there and the preview stayed signed out ("old account"). (2) "Coming soon" appears when the deployment has no `MONGODB_URI` (503) or no `RESEND_API_KEY`/`EMAIL_FROM`, with no hint which. (3) Regression from session 16: the header "Account" link had been made desktop-only.
+- Fixed on `feat/kiss-wallet` (`5544a44`): previews (`VERCEL_ENV=preview`) put their own address in sign-in links (production still uses `SITE_URL`); outside production `/api/me` returns `setup.missing` (names only) and the coming-soon card shows a setup note; preview share images use `VERCEL_BRANCH_URL`; header on phones: Account as a round icon button (bust emoji 1f464, hidden only under 340 px), wallet chip icon + number, smaller logo/CTA under 420/380 px, back link hidden next to "Play free" under 420 px.
+- Tested: preview-mode sign-in link points to the preview's own address; production mode still uses `SITE_URL`; full sign-in → verify → signed in (dev); production build never shows the setup note, preview build lists the 3 missing settings; header has no overflow on 8 pages at 320/360/375/390/414/768/1440 px (also with "99+"); wallet API 92/92, wallet browser flow 30/30 at 360, 390, 1440 px; build passes.
+- Could not open the real preview from the sandbox (not on the allowlist), so the missing-settings cause is unconfirmed until Raj checks.
+- Next: Raj sets Preview env vars, redeploys, tests accounts + wallet on two phones, approves the merge.
+
 ### 2026-11-18 (session 16) — Kiss Wallet rules + wallet built
 - Raj asked (yes/no) whether to theme the whole site around a kiss wallet where winners earn and losers owe kisses. Claude: **yes**, with 3 conditions (never blocks playing, light not debt-like, never buyable). Raj then asked for researched standard rules and a wallet for every person.
 - Research: Online Gaming Act 2025 + Rules 2026 (other stakes, social game, OGAI classification), loss aversion, faucet/sink economy design, Octalysis loss/fear warning; reused session 10 relationship research.
