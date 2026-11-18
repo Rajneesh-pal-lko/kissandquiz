@@ -17,9 +17,30 @@ export function emailAvailable(): boolean {
   return Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM) || process.env.NODE_ENV !== "production";
 }
 
-/** The site's public address, used in emailed links. */
+/** True on Vercel preview deployments (each branch gets its own address). */
+export function isPreview(): boolean {
+  return process.env.VERCEL_ENV === "preview";
+}
+
+/**
+ * The address put in emailed sign-in links. Production uses SITE_URL. Previews always use their
+ * own address: otherwise the link opens the live site, signs you in there, and the preview stays
+ * signed out (the session cookie belongs to one address only).
+ */
 export function siteOrigin(req: Request): string {
-  return (process.env.SITE_URL || new URL(req.url).origin).replace(/\/$/, "");
+  const own = new URL(req.url).origin;
+  return (isPreview() ? own : process.env.SITE_URL || own).replace(/\/$/, "");
+}
+
+/**
+ * What's missing for accounts to work. Only sent outside production (preview / local), so the
+ * "coming soon" screen can say which Vercel setting to add. Names only, never values.
+ */
+export function setupHint(): { env: string; missing: string[] } | undefined {
+  if (process.env.VERCEL_ENV === "production") return undefined;
+  if (process.env.NODE_ENV !== "production") return undefined; // local dev works without them
+  const missing = ["MONGODB_URI", "RESEND_API_KEY", "EMAIL_FROM"].filter((k) => !process.env[k]);
+  return { env: process.env.VERCEL_ENV || "unknown", missing };
 }
 
 export async function startSession(userId: string): Promise<void> {

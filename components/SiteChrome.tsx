@@ -23,7 +23,7 @@ export function SiteHeader({ back, hideCta }: HeaderProps) {
         </Link>
         <nav className="nav" aria-label="Main">
           {back ? (
-            <Link href={back.href} className="nav-link">
+            <Link href={back.href} className={hideCta ? "nav-link back" : "nav-link back optional"}>
               {back.label}
             </Link>
           ) : (
@@ -31,8 +31,9 @@ export function SiteHeader({ back, hideCta }: HeaderProps) {
               <Link href="/results/" className="nav-link wide-only">
                 My results
               </Link>
-              <Link href="/account/" className="nav-link wide-only">
-                Account
+              <Link href="/account/" className="nav-link acct" aria-label="My account">
+                <Emoji code="1f464" size={22} className="acct-icon" />
+                <span className="acct-label">Account</span>
               </Link>
             </>
           )}

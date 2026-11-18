@@ -2,7 +2,7 @@
 // PATCH  /api/me/  { name }               (rename)
 // DELETE /api/me/                          (delete account, its quizzes and results)
 import { NextResponse } from "next/server";
-import { currentUser, endSession, emailAvailable } from "@/lib/auth";
+import { currentUser, endSession, emailAvailable, setupHint } from "@/lib/auth";
 import { cleanName } from "@/lib/quizRules";
 import { store, storeAvailable } from "@/lib/store";
 
@@ -12,10 +12,15 @@ export const dynamic = "force-dynamic";
 const noStore = { "Cache-Control": "no-store" };
 
 export async function GET() {
-  if (!storeAvailable()) return NextResponse.json({ error: "unavailable" }, { status: 503 });
+  if (!storeAvailable()) return NextResponse.json({ error: "unavailable", setup: setupHint() }, { status: 503, headers: noStore });
   try {
     const user = await currentUser();
-    if (!user) return NextResponse.json({ error: "signed_out", accounts: emailAvailable() }, { status: 401, headers: noStore });
+    if (!user) {
+      return NextResponse.json(
+        { error: "signed_out", accounts: emailAvailable(), ...(emailAvailable() ? {} : { setup: setupHint() }) },
+        { status: 401, headers: noStore },
+      );
+    }
     const quizzes = await store().listQuizzesByOwner(user._id);
     const withResults = await Promise.all(
       quizzes.map(async (q) => {

@@ -3644,3 +3644,104 @@ a.review-item {
     grid-template-columns: repeat(4, 1fr);
   }
 }
+
+/* Header on phones: Account as an icon, wallet chip as icon + number, smaller logo. */
+.nav-link.acct {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.nav-link.acct .acct-icon {
+  display: none;
+}
+
+@media (max-width: 520px) {
+  .nav-link.acct {
+    min-width: 40px;
+    min-height: 40px;
+    justify-content: center;
+    padding: 6px;
+    border: 1.5px solid var(--line-strong);
+    background: #fff;
+  }
+
+  .nav-link.acct .acct-icon {
+    width: 20px;
+    height: 20px;
+    opacity: 0.85;
+  }
+
+  .nav-link.acct .acct-icon {
+    display: block;
+  }
+
+  .nav-link.acct .acct-label,
+  .wallet-chip .wc-label {
+    display: none;
+  }
+
+  .wallet-chip {
+    min-width: 40px;
+    justify-content: center;
+    padding: 6px 10px 6px 7px;
+  }
+
+  .wallet-chip:has(.wc-label) {
+    padding: 6px;
+  }
+}
+
+@media (max-width: 420px) {
+  .site-header-in {
+    gap: 8px;
+  }
+
+  .nav {
+    gap: 5px;
+  }
+
+  .logo {
+    font-size: 19px;
+    gap: 6px;
+  }
+
+  .logo .logo-mark {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+/* The logo already links home, so a back link next to "Play free" can go on small phones. */
+@media (max-width: 420px) {
+  .nav-link.back.optional {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .site-header-in {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .logo {
+    font-size: 18px;
+  }
+
+  .nav-cta {
+    padding: 8px 12px;
+    font-size: 13.5px;
+  }
+
+  .wallet-chip {
+    padding: 6px 8px 6px 6px;
+    font-size: 13.5px;
+  }
+}
+
+@media (max-width: 340px) {
+  .nav-link.acct {
+    display: none;
+  }
+}

@@ -4,8 +4,10 @@ import "@fontsource-variable/plus-jakarta-sans";
 import "./globals.css";
 
 // Absolute URLs for share images. Uses SITE_URL (already set in Vercel for sign-in emails);
-// without it, Vercel fills in the deployment URL automatically.
-const siteUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL;
+// without it, Vercel fills in the deployment URL automatically. Previews use their own address.
+const previewUrl =
+  process.env.VERCEL_ENV === "preview" && process.env.VERCEL_BRANCH_URL ? `https://${process.env.VERCEL_BRANCH_URL}` : undefined;
+const siteUrl = previewUrl || process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL;
 
 export const metadata: Metadata = {
   ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),

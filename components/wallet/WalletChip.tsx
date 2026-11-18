@@ -36,7 +36,7 @@ export default function WalletChip() {
   return (
     <Link href="/wallet/" className="wallet-chip" aria-label={n === null ? "Kiss Wallet" : `Kiss Wallet: ${n} kisses owed to you`}>
       <Emoji code="1f48b" size={20} />
-      <span>{n === null ? "Wallet" : n > 99 ? "99+" : n}</span>
+      {n === null ? <span className="wc-label">Wallet</span> : <span>{n > 99 ? "99+" : n}</span>}
     </Link>
   );
 }

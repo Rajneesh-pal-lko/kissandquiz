@@ -13,7 +13,8 @@ type Me = {
   user: { name: string; email: string; createdAt: string };
   quizzes: { id: string; n: string; createdAt: string; plays: number; last: { score: number; total: number; partner: string | null } | null }[];
 };
-type View = { kind: "loading" } | { kind: "out"; accounts: boolean } | { kind: "in"; me: Me } | { kind: "error" };
+type Setup = { env: string; missing: string[] };
+type View = { kind: "loading" } | { kind: "out"; accounts: boolean; setup?: Setup } | { kind: "in"; me: Me } | { kind: "error" };
 
 const day = (iso: string) => {
   try {
@@ -261,9 +262,12 @@ export default function AccountPage() {
       let res = await fetch("/api/me/", { cache: "no-store" });
       if (res.status === 401) {
         const data = await res.json().catch(() => ({}));
-        return setView({ kind: "out", accounts: data.accounts !== false });
+        return setView({ kind: "out", accounts: data.accounts !== false, setup: data.setup });
       }
-      if (res.status === 503) return setView({ kind: "out", accounts: false });
+      if (res.status === 503) {
+        const data = await res.json().catch(() => ({}));
+        return setView({ kind: "out", accounts: false, setup: data.setup });
+      }
       if (!res.ok) return setView({ kind: "error" });
       // Signed in: pull in quizzes made on this phone, then show the up-to-date list.
       if ((await claimLocalQuizzes()) > 0) res = await fetch("/api/me/", { cache: "no-store" });
@@ -303,6 +307,13 @@ export default function AccountPage() {
             <Emoji code="1f48c" size={60} />
             <h2>Accounts are coming soon</h2>
             <p className="muted">For now, results are saved on the phone you made your quiz on.</p>
+            {view.setup && view.setup.missing.length > 0 && (
+              <p className="feedback bad" style={{ textAlign: "left" }}>
+                Setup note ({view.setup.env} deployment, only shown outside the live site): add{" "}
+                <strong>{view.setup.missing.join(", ")}</strong> in Vercel → Settings → Environment Variables for{" "}
+                <strong>{view.setup.env === "preview" ? "Preview" : view.setup.env}</strong>, then redeploy.
+              </p>
+            )}
             <Link href="/results/" className="btn">
               My results
             </Link>
