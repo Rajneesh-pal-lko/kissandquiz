@@ -53,7 +53,7 @@ To verify still: domain purchase, Instagram/YouTube/X handles (`kissandquiz`), t
 | `lib/ui.ts` | Category labels + 3D icons, option letters, `scoreMood(pct)` (verdict + animated reaction) |
 | `lib/seo.ts` | `SHARE_IMAGE` for pages that set their own `openGraph` (Next.js drops the parent's image otherwise) |
 | `app/opengraph-image.jpg`, `app/icon.png`, `app/apple-icon.png` | Default share image (1200×630, 76 KB), favicon and home-screen icon (Fluent heart-with-arrow) |
-| `lib/games.ts` | Game catalog (slug, title, tagline, emoji, `icon` = 3D emoji codepoint, status live/soon, category, time, card colours). To launch a game: add its page under `app/games/<slug>/` and set status to `live`. `FEATURED_SLUG` = big card on home (How Well Do You Know Me); other live games show as normal clickable cards ("New · Play now") |
+| `lib/games.ts` | Game catalog (slug, title, tagline, emoji, `icon` = 3D emoji codepoint, status live/soon, category, time, card colours). To launch a game: add its page under `app/games/<slug>/` and set status to `live`. `FEATURED_SLUG` = big card on home (How Well Do You Know Me). Home "Play now" is a **bento grid** (`.play-grid`): on desktop the featured card spans 2 of 3 columns and other live games sit beside it as `.feature.mini` cards (own violet-plum gradient, art that shows the game, e.g. a real WYR question with "Riya" / "Aarav's guess"); cards switch layout with container queries (side by side when the card is ≥ 620 px wide, stacked below that). Add per-game art in `MiniArt` in `app/page.tsx` |
 | `app/games/how-well-do-you-know-me/page.tsx` | Game 1 landing page: hero + preview, How it works, "78 questions, 7 topics" chips (counted from the bank), FAQ with FAQPage JSON-LD, CTA band, sticky mobile CTA |
 | `app/create/page.tsx` | Creator flow: name → 10 questions (Back/Next, auto-advance on tap, 🔄 swap question) → review screen (tap to edit, change name) → share (WhatsApp, native share, copy, edit answers, new quiz). Draft saved in localStorage (`kq.create.v1`) so refresh doesn't lose work |
 | `app/create/layout.tsx` | Share/SEO metadata for `/create/` |
@@ -247,6 +247,7 @@ Proposed order after Research 2:
 - Not tested: real Atlas cluster (sandbox can't reach it) and real phones / WhatsApp in-app browser. Raj to test on the preview.
 - Security: Raj shared the preview Atlas user + password in chat; not stored in repo, docs or memory. Rotate it after testing.
 - Next: Raj sets Preview env vars, tests on two phones, approves the merge.
+- Later the same session: Raj flagged the home "Play now" section on desktop as bad (WYR card half width, empty gradient, blank right half). Claude had only checked phone widths. Fixed: bento grid (featured 2/3 + WYR 1/3 at the same height on desktop, full-width side-by-side cards on tablet, stacked on phones), WYR card redesigned with its own gradient and a real question as art. Also on wide screens: landing-page sample questions and the "How it works" steps (both game pages) now use two columns. Checked at 1440, 1180, 1024, 820 and 390 px; the 2-profile flow test still passes at 390 and 360 px. Lesson: screenshot desktop and tablet widths too, not just phones.
 
 ### 2026-11-18 (session 13) — ChatGPT deep-research report reviewed
 - Raj ran a ChatGPT deep-research prompt (written by Claude) and shared the report. Claude cross-checked the key claims.
