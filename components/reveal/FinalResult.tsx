@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { AnimatedEmoji, Emoji, WhatsAppIcon } from "@/components/Emoji";
 import { confetti } from "@/components/fx";
-import { fill, initial } from "@/lib/reveal/rules";
+import { fill, initial, lcFirst } from "@/lib/reveal/rules";
 import type { Answer, RevealConfig, Score } from "@/lib/reveal/types";
 
 type Props = {
@@ -126,7 +126,7 @@ export default function FinalResult({ cfg, me, q, mine, theirs, score, names, li
               return (
                 <li key={qi} className="result-item">
                   <span className="ans-q">
-                    {r + 1}. {opt(qi, 0)} or {opt(qi, 1)}?
+                    {r + 1}. {opt(qi, 0)} or {lcFirst(opt(qi, 1))}?
                   </span>
                   <span className="ans-line">
                     {same && <Emoji code="1f49e" size={16} />} You: <b>{opt(qi, a.pick)}</b> · {otherName}: <b>{opt(qi, b.pick)}</b>

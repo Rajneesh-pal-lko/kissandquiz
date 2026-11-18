@@ -34,7 +34,9 @@ type Ui = { reveal: number | null; pending: { round: number; pick: number } | nu
 const POLL_MS = 10_000;
 const TOKEN_RE = /^[A-Za-z0-9_-]{20,100}$/;
 
-export function GameProblem({ reason, cfg }: { reason: "broken" | "expired" | "offline"; cfg: RevealConfig }) {
+/** Broken / expired / offline screens. Takes the game type (not the config) so server pages can render it. */
+export function GameProblem({ reason, type }: { reason: "broken" | "expired" | "offline"; type: GameType }) {
+  const cfg = configFor(type) as RevealConfig;
   return (
     <>
       <SiteHeader />
@@ -88,6 +90,7 @@ export default function RevealGame({ type, id, creator }: Props) {
   const [tap, setTap] = useState<{ round: number; sub: "pick" | "guess"; i: number } | null>(null);
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const linkToken = useRef<string | null>(null);
   const uiKey = `kq.reveal.ui.${id}`;
 
   const showGame = useCallback(
@@ -140,21 +143,26 @@ export default function RevealGame({ type, id, creator }: Props) {
 
   // First load: private link (#token) → saved token on this phone → stranger.
   useEffect(() => {
-    let tok: string | null = null;
-    let fromLink = false;
-    const hash = window.location.hash.slice(1);
-    if (hash) {
-      if (TOKEN_RE.test(hash)) {
-        tok = hash;
-        fromLink = true;
+    function init() {
+      const hash = window.location.hash.slice(1);
+      if (hash) {
+        // Keep the link's token in a ref: the #hash is removed right away, and this effect
+        // can run twice (React dev mode) before the token is saved on the phone.
+        linkToken.current = TOKEN_RE.test(hash) ? hash : null;
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
       }
-      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      const fromLink = !!linkToken.current;
+      const tok = linkToken.current ?? getMyGame(id)?.token ?? null;
+      setNotice("");
+      fetchState(tok, fromLink);
     }
-    if (!tok) tok = getMyGame(id)?.token ?? null;
     const savedUi = load<Ui>(uiKey, "session");
     if (savedUi && typeof savedUi === "object") setUi({ reveal: savedUi.reveal ?? null, pending: savedUi.pending ?? null });
-    fetchState(tok, fromLink);
+    init();
+    // A private link pasted into a tab that already shows this game only changes the #hash.
+    window.addEventListener("hashchange", init);
     return () => {
+      window.removeEventListener("hashchange", init);
       if (timer.current) clearTimeout(timer.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -273,8 +281,8 @@ export default function RevealGame({ type, id, creator }: Props) {
         </main>
       </>
     );
-  if (screen.kind === "offline") return <GameProblem reason="offline" cfg={cfg} />;
-  if (screen.kind === "gone") return <GameProblem reason="expired" cfg={cfg} />;
+  if (screen.kind === "offline") return <GameProblem reason="offline" type={type} />;
+  if (screen.kind === "gone") return <GameProblem reason="expired" type={type} />;
 
   if (screen.kind === "full")
     return (
@@ -608,11 +616,9 @@ export default function RevealGame({ type, id, creator }: Props) {
             )}
           </div>
           {guessing && (
-            <div className="btn-row">
-              <button className="btn ghost" onClick={() => setUi({ reveal: null, pending: null })} disabled={busy}>
-                ← Change my pick
-              </button>
-            </div>
+            <button className="btn ghost" onClick={() => setUi({ reveal: null, pending: null })} disabled={busy} style={{ marginTop: 16 }}>
+              ← Change my pick
+            </button>
           )}
           <p className="muted center tip">
             {guessing

@@ -2611,7 +2611,8 @@ a.review-item {
   text-align: center;
   color: var(--ink);
   cursor: pointer;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  hyphens: auto;
   transition: transform 0.12s var(--ease-out), box-shadow 0.12s, border-color 0.15s;
 }
 
@@ -2752,9 +2753,16 @@ a.review-item {
   margin-top: 10px;
   font-family: var(--font-display);
   font-weight: 750;
-  font-size: 17px;
+  font-size: 16px;
   line-height: 1.25;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+@media (min-width: 420px) {
+  .side .pick {
+    font-size: 17px;
+  }
 }
 
 .pair.same .side {
@@ -2809,7 +2817,7 @@ a.review-item {
   font-size: 15px;
   font-weight: 650;
   line-height: 1.35;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   animation: rise 0.35s var(--ease-out) both;
   animation-delay: 0.2s;
 }

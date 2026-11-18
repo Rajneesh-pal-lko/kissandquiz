@@ -5,7 +5,7 @@
 import { useEffect, useRef } from "react";
 import { Emoji } from "@/components/Emoji";
 import { confetti, heartBurst } from "@/components/fx";
-import { fill, initial } from "@/lib/reveal/rules";
+import { fill, initial, lcFirst } from "@/lib/reveal/rules";
 import type { Answer, RevealConfig } from "@/lib/reveal/types";
 
 type Props = {
@@ -68,7 +68,7 @@ export default function RoundReveal({ cfg, qIndex, round, total, mine, theirs, n
       </div>
       <div className="slide-in">
         <p className="reveal-q">
-          {qn.prompt} {opt(0)} or {opt(1)}?
+          {qn.prompt.replace(/…$/, "")} {lcFirst(opt(0))} or {lcFirst(opt(1))}?
         </p>
         {same && (
           <p className="same-banner" ref={sameRef}>

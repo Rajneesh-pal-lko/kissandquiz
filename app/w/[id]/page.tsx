@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function WyrGamePage({ params }: Params) {
   const { id } = await params;
   const { game, error } = await findGame(id);
-  if (error) return <GameProblem reason="offline" cfg={WYR} />;
-  if (!game) return <GameProblem reason={GAME_ID_RE.test(id) ? "expired" : "broken"} cfg={WYR} />;
+  if (error) return <GameProblem reason="offline" type={WYR.type} />;
+  if (!game) return <GameProblem reason={GAME_ID_RE.test(id) ? "expired" : "broken"} type={WYR.type} />;
   return <RevealGame type={WYR.type} id={id} creator={game.players[0].name} full={game.players.length >= 2} />;
 }

@@ -150,3 +150,10 @@ export function fill(text: string, names: { A?: string | null; B?: string | null
 export function initial(name: string | null | undefined): string {
   return Array.from(name || "?")[0]?.toLocaleUpperCase() ?? "?";
 }
+
+/** "Ghar ka khana forever" → "ghar ka khana forever", for use mid-sentence (keeps "IPL", "I"). */
+export function lcFirst(s: string): string {
+  const first = s.split(" ")[0];
+  if (first === "I" || (first.length > 1 && first === first.toUpperCase())) return s;
+  return s.charAt(0).toLowerCase() + s.slice(1);
+}

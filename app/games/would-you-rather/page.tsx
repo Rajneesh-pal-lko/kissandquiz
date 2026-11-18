@@ -5,6 +5,7 @@ import WyrPreview from "@/components/reveal/WyrPreview";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import StickyCta from "@/components/StickyCta";
 import { WYR } from "@/lib/reveal/configs";
+import { lcFirst as lc } from "@/lib/reveal/rules";
 import { SHARE_IMAGE } from "@/lib/seo";
 import { WYR_CATEGORY_UI, WYR_QUESTIONS, WYR_SAMPLE_IDS, type WyrCategory } from "@/lib/wyrQuestions";
 
@@ -55,11 +56,6 @@ const faqJsonLd = {
   mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
 };
 
-/** "Ghar ka khana forever" → "ghar ka khana forever" (keeps words like "IPL" as they are). */
-function lc(s: string): string {
-  const first = s.split(" ")[0];
-  return first.length > 1 && first === first.toUpperCase() ? s : s.charAt(0).toLowerCase() + s.slice(1);
-}
 
 export default function WouldYouRatherPage() {
   const active = WYR_QUESTIONS.filter((q) => !q.retired);

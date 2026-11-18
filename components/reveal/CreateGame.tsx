@@ -89,10 +89,14 @@ export default function CreateGame({ type }: { type: GameType }) {
   useEffect(() => {
     const rematch = load<Rematch>(REMATCH_KEY);
     if (rematch && rematch.type === type) {
-      remove(REMATCH_KEY);
       const name = typeof rematch.name === "string" ? rematch.name.slice(0, NAME_MAX) : "";
       const partner = typeof rematch.partner === "string" ? rematch.partner.slice(0, NAME_MAX) : "";
-      setD(fresh(cfg, name, partner));
+      const draft = fresh(cfg, name, partner);
+      // Save the new draft before clearing the hint, so a second run of this effect
+      // (React dev mode, or a quick refresh) loads the same draft instead of a blank one.
+      save(draftKey(type), draft);
+      remove(REMATCH_KEY);
+      setD(draft);
     } else {
       const saved = load<Draft>(draftKey(type));
       if (isValid(cfg, saved)) {
