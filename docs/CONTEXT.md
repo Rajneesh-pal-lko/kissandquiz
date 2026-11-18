@@ -215,7 +215,34 @@ Fixes (proposed design):
 5. Pairing via the shared couple link (no email needed); email optional to keep it.
 Timing idea: launch the Kiss Khata on **Kiss Day, Feb 13, 2027** (Valentine Week).
 
+### Game idea: "Earn Kisses" (Raj, 2026-11-18, session 15) — designed, waiting for Raj's decisions
+Raj's idea: a game where one partner sends tasks over the link (questions, truth or dare, challenges, more); the other earns kisses into a **kiss wallet**; the partner pays them **when they meet**. Either partner can send. This is the session 10 Kiss Wallet in a simpler, standalone shape (supersedes "Kiss Wallet on hold until earning rules are decided": the earning rules are below).
+**Verdict (Claude): strongest original idea so far, 8/10.** The "pay when we meet" (udhaar/khata) angle is the hook nobody uses; it fits Indian couples who can't meet daily and long-distance couples. Unlike our one-shot games, every task is a new WhatsApp message, so it has a built-in return loop (the PDF's week-2 return test).
+Competitors (checked 2026-11-18): Kyupid (complete tasks → points → "Kyupons", iPhone only), Favour (tasks for each other, rewards spent in each other's custom shop), Cutest Couple (tasks → XP and "Love Coins" → wishes), BetweenUs (send a question/challenge, earn points, streaks), Couple Coupons + Couple Game by iPassion (prizes for answering), Couple Cards ("Steal a Kiss" cards), Hint of Us (kisses + streaks, $59.99/yr). All are app installs with points/coupons; none is a free web link, none is kiss-only, none is built around "settle when you meet".
+Conflict with the batch 1 rule (known games only): Earn Kisses is a new format, but every earning mode inside it is a known game (questions, truth or dare, challenges, would you rather). Treat it as the **wrapper** that makes the known games matter, not as an extra game.
+
+**Core loop:** A creates a couple room (2 names, "we're both 18+" tick) → picks or writes tasks and sets a kiss price (1–5 each) → sends on WhatsApp ("Riya sent you 3 tasks worth 8 kisses 😘") → B answers/does them → A approves (✅ / "nahi chalega" ❌, B can tap "Objection!" → coin flip) → kisses land in B's wallet → B sends tasks back → when they meet: "Pay now" → both tap → balance drops, confetti.
+**Earning modes:**
+1. **Ask & Earn** (Raj #1): questions from a bank or written by the sender; sender approves the answer.
+2. **Guess Me** (auto-scored, no approval fights): reuse How Well Do You Know Me / Would You Rather; each correct guess = 1 kiss.
+3. **Truth or Dare for Kisses** (Raj #2): truth 1–2, dare 2–3; skipping is always allowed but earns nothing (in Mild the sender may set "skip = you pay 1").
+4. **Challenges** (Raj #3): small tasks done on the phone, proof sent on WhatsApp (voice note singing a song line, silliest selfie, 4-line shayari, "describe me in 3 emojis", "plan our next date in 5 lines"). No uploads stored by us.
+5. **Bets / double or nothing**: wager 1–5 kisses on a guess; comeback for the one who is behind.
+6. **Daily Kiss Drop** (later): one question per day, both answer, match = +1 each, streaks.
+7. **Lucky Spin** (later): one spin per day, luck so the weaker player can still win.
+8. **Gift kisses**: give kisses for nothing ("just because"), keeps it loving, not a trade.
+**Twist: Kiss rate card** — the wallet counts kisses, paid with kiss types: peck/forehead 1, hug + kiss 3, 10-second kiss 5, "movie kiss" 10. Card shows "Raj owes Riya 23 kisses = 2 movie kisses + 1 hug-kiss".
+**Guard rails:** max 5 per task and a daily cap; "Forgive all / clear the khata" button; either partner can pause the room; kisses are **never buyable or convertible to money** (India Online Gaming Act 2025); the Couple Pass may unlock task decks, never kisses; anything beyond kisses lives only on the 18+ subdomain, only mutual-yes items (session 10 rules), skip always free.
+**Share card:** "Riya owes Raj 23 kisses 😘 · Settle on our next meet" (khata/receipt style) for WhatsApp/Stories = the viral asset.
+**Tech (proposed):** couple room link `/k/<id>/` with a private per-player token (same pattern as `/w/<id>/#<token>`); collections `kissRooms` {players[name, tokenHash], createdAt, nextMeet?} and `kissTasks` {roomId, from, to, mode, text, price, status sent/answered/approved/rejected/skipped, answer, createdAt} + `kissPayments`; balance computed from these; no realtime (refresh on open, WhatsApp message is the notification); 6-month auto-delete; per-IP rate limit.
+**MVP (about 2 weekends):** room + Ask & Earn (bank + custom, price 1–5) + approve/objection + wallet + Pay when we meet + rate card + share text. V2: Truth or Dare deck, Challenges deck, Guess Me linking existing games, bets. V3: Daily Kiss Drop, Lucky Spin, meet countdown, share-card image.
+**Risks:** "earn kisses" has no proven search demand (growth must come from WhatsApp + Reels, not Google); "kiss" games attract teens (18+ tick, no minors' data); score-keeping can feel transactional (gift kisses, forgive-all, low prices); approval disputes (objection coin flip turns it into a joke).
+Name options: **Earn Kisses** (clear, global; Claude's pick for the game title/URL `/games/earn-kisses/`), **Kiss Khata** (Hinglish name for the wallet), Kiss Jar. Launch push: **Kiss Day, Sat Feb 13, 2027**.
+Decisions for Raj: (1) name, (2) build the MVP now (before Most Likely To) or after the known games, (3) OK with the rate card + guard rails.
+
 ## 6. Next steps
+**Session 15 (proposed, waiting for Raj):** 0) Raj decides on Earn Kisses: name, build now vs. after Most Likely To, rate card + guard rails. 1) If "now": build the Earn Kisses MVP (room `/k/<id>/`, Ask & Earn, approve/objection, wallet, Pay when we meet, rate card, share text), then Most Likely To. If "later": Most Likely To → Never Have I Ever → Truth or Dare, and Earn Kisses in January for Kiss Day (Feb 13). 2) Session 14 items still open: real-phone test of Would You Rather, rotate the Atlas password, buy kissandquiz.com.
+
 **Session 14 (current, priority order):** 1) **Raj:** play Would You Rather on production with two real phones (WhatsApp in-app browser + Chrome): create → send → partner joins → per-round reveal → final → creator reopens link. If `/w/<id>/` shows "Couldn't load this game", check Production `MONGODB_URI` and Atlas Network Access (`0.0.0.0/0`). 2) **Rotate the preview Atlas password** (it was shared in chat) and update Vercel. 3) ~~Merge `feat/would-you-rather` into `main`~~ (done 2026-11-18, Raj asked to push to main). 4) Optional: set `RATE_LIMIT_SALT` in Vercel (Production + Preview). 4) Next game on the reveal engine: **Most Likely To** (options `{A}` / `{B}` / "Both"), then Never Have I Ever, then Truth or Dare (deck engine), then two-way How Well Do You Know Me. 5) Still open from before: buy kissandquiz.com, score-card image, Search Console + sitemap, Kiss Wallet rules (scores are already stored per player for it).
 
 **Session 7 (proposed, priority order; replaces the session 6 order once Raj approves):** 0) Raj decides: Model B, "spicy not explicit", founders' price, hosting (Vercel Pro vs Cloudflare). 1) Buy kissandquiz.com (gateways need a live site with terms, refund policy, contact). 2) Email Razorpay + Cashfree 10 sample Spicy Match cards; get written approval; one lawyer consult. 3) Build Spicy Match (Mild free + one paid Hot level) on the existing link + MongoDB, 18+ subdomain. 4) Checkout (UPI + cards) + Couple Pass unlock for both partners + simple funnel tracking (paused by Raj for now; needed before the ads test). 5) Mid-Jan ₹10,000 ads pre-order test. 6) Feb 7–14 Valentine push with founders' offer. 7) Feb 15 review; if people pay, add Scratch-off dates and Truth or Dare Spicy.
@@ -239,6 +266,12 @@ Proposed order after Research 2:
 ---
 
 ## 7. Progress log
+### 2026-11-18 (session 15) — "Earn Kisses" game designed
+- Raj's idea: "Earn Kisses": partners send each other questions, truth or dare, challenges and other tasks over the link; answers earn kisses into a kiss wallet, paid when they meet.
+- Research: competitor couple apps with tasks → points → coupons (Kyupid, Favour, Cutest Couple, BetweenUs, Couple Coupons/Couple Game, Couple Cards, Hint of Us); all app installs, none web-link, none "settle when you meet". Reused session 10 research on rewards in relationships and the Online Gaming Act.
+- Proposed design in section 5 ("Game idea: Earn Kisses"): 8 earning modes, kiss rate card twist, guard rails, share card, data model, MVP scope, Kiss Day launch. Rated 8/10.
+- No code changed. Waiting for Raj: name, build now vs. later, rate card + guard rails.
+
 ### 2026-11-18 (session 14) — Built Would You Rather + the reveal engine
 - Raj's spec: Would You Rather for Couples with a prediction twist, built as the reusable "private answer → reveal" engine for Most Likely To, Never Have I Ever and Yes/No/Maybe. Claude sent a plan; Raj said OK (per-IP rate limit yes, games list on `/results/` yes, `rematchOf` left out).
 - Built on branch `feat/would-you-rather` (not merged): engine `lib/reveal/` (config, rules, server-only `viewFor` privacy filter), `games` + `rateLimits` collections, `/api/game/` routes, 120 questions (`lib/wyrQuestions.ts`), landing page, creator flow `/games/would-you-rather/start/`, game link `/w/<id>/` with server-rendered WhatsApp preview, per-round reveal, final screen, rematch loop, creator waiting/progress/reveal, third-player block, private creator link, home card (HWDYKM stays featured), footer link, results list, privacy page update, README, 3 new Fluent 3D emoji (✈️ 2708, 🪔 1fa94, 🆚 1f19a).
