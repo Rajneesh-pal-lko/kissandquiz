@@ -6,6 +6,7 @@ import "server-only";
 import { createHash, randomBytes } from "crypto";
 import { MongoClient, type Collection } from "mongodb";
 import type { Pair } from "@/lib/quizRules";
+import type { Answer, GameType, Score } from "@/lib/reveal/types";
 
 export type QuizDoc = {
   _id: string; // short ID used in /q/<id>
@@ -40,6 +41,32 @@ export type LoginTokenDoc = { _id: string; email: string; name: string; createdA
 /** Signed-in browser. Stored hashed; expires after SESSION_DAYS. */
 export type SessionDoc = { _id: string; userId: string; createdAt: Date };
 
+/** One player in a reveal game (Would You Rather etc.). Only the token's hash is stored. */
+export type GamePlayer = {
+  name: string;
+  tokenHash: string;
+  /** One entry per round; null until that round is answered. */
+  answers: (Answer | null)[];
+  joinedAt: Date;
+  finishedAt?: Date;
+  /** Set when both players have finished (for the future Kiss Wallet). */
+  score?: { correct: number; matches: number };
+};
+
+/** A two-player reveal game. players[0] = creator (A), players[1] = partner (B). */
+export type GameDoc = {
+  _id: string; // short ID used in /w/<id>
+  type: GameType;
+  q: number[]; // question indexes (stable IDs in the game's bank)
+  players: GamePlayer[];
+  createdAt: Date;
+  joinedAt?: Date; // when B joined
+  finishedAt?: Date; // when both had answered every round
+};
+
+/** Fixed-window request counter for rate limits. `_id` = action:ipHash:window. */
+export type RateDoc = { _id: string; n: number; createdAt: Date };
+
 /** Quizzes and results are deleted automatically after this many days (privacy: keep data minimal). */
 export const RETENTION_DAYS = 180;
 /** Partner-only game: cap stored attempts per quiz so a link can't be spammed. */
@@ -48,6 +75,8 @@ export const LOGIN_TOKEN_MINUTES = 15;
 export const SESSION_DAYS = 30;
 /** Max sign-in emails per address within LOGIN_TOKEN_MINUTES. */
 export const MAX_LOGIN_EMAILS = 3;
+/** Rate-limit counters (hashed IPs) are deleted after this long. */
+export const RATE_KEEP_SECONDS = 2 * 60 * 60;
 
 const DB_NAME = process.env.MONGODB_DB || "kissandquiz";
 const ID_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -106,6 +135,25 @@ interface Store {
   insertSession(doc: SessionDoc): Promise<void>;
   getSession(hash: string): Promise<SessionDoc | null>;
   deleteSession(hash: string): Promise<void>;
+  // reveal games
+  insertGame(doc: GameDoc): Promise<void>;
+  getGame(id: string): Promise<GameDoc | null>;
+  /** Atomically take slot B. False if someone already has it. */
+  joinGame(id: string, player: GamePlayer, at: Date): Promise<boolean>;
+  /**
+   * Save one answer, only if that round is still empty for that player (so a round can't be
+   * changed after the reveal, even with two requests at once). `finish` is set on the last round.
+   */
+  saveRound(
+    id: string,
+    player: 0 | 1,
+    tokenHash: string,
+    round: number,
+    answer: Answer,
+    finish?: { at: Date; score: Score },
+  ): Promise<boolean>;
+  /** Count one request in a rate-limit window and return the new count. */
+  hitRate(key: string): Promise<number>;
 }
 
 const minutesAgo = (m: number) => new Date(Date.now() - m * 60 * 1000);
@@ -121,6 +169,8 @@ type Cols = {
   users: Collection<UserDoc>;
   loginTokens: Collection<LoginTokenDoc>;
   sessions: Collection<SessionDoc>;
+  games: Collection<GameDoc>;
+  rateLimits: Collection<RateDoc>;
 };
 
 async function collections(): Promise<Cols> {
@@ -138,6 +188,8 @@ async function collections(): Promise<Cols> {
     users: db.collection<UserDoc>("users"),
     loginTokens: db.collection<LoginTokenDoc>("loginTokens"),
     sessions: db.collection<SessionDoc>("sessions"),
+    games: db.collection<GameDoc>("games"),
+    rateLimits: db.collection<RateDoc>("rateLimits"),
   };
   if (!g._kqIndexes) {
     const day = 24 * 60 * 60;
@@ -150,6 +202,8 @@ async function collections(): Promise<Cols> {
       c.loginTokens.createIndex({ createdAt: 1 }, { expireAfterSeconds: LOGIN_TOKEN_MINUTES * 60 }),
       c.loginTokens.createIndex({ email: 1 }),
       c.sessions.createIndex({ createdAt: 1 }, { expireAfterSeconds: SESSION_DAYS * day }),
+      c.games.createIndex({ createdAt: 1 }, { expireAfterSeconds: RETENTION_DAYS * day }),
+      c.rateLimits.createIndex({ createdAt: 1 }, { expireAfterSeconds: RATE_KEEP_SECONDS }),
     ])
       .then(() => undefined)
       .catch(() => {
@@ -234,6 +288,41 @@ const mongoStore: Store = {
   async deleteSession(hash) {
     await (await collections()).sessions.deleteOne({ _id: hash });
   },
+  async insertGame(doc) {
+    await (await collections()).games.insertOne(doc);
+  },
+  async getGame(id) {
+    return (await collections()).games.findOne({ _id: id });
+  },
+  async joinGame(id, player, at) {
+    const r = await (await collections()).games.updateOne(
+      { _id: id, "players.1": { $exists: false } },
+      { $push: { players: player }, $set: { joinedAt: at } },
+    );
+    return r.modifiedCount === 1;
+  },
+  async saveRound(id, player, tokenHash, round, answer, finish) {
+    const set: Record<string, unknown> = { [`players.${player}.answers.${round}`]: answer };
+    if (finish) {
+      set.finishedAt = finish.at;
+      set[`players.${player}.finishedAt`] = finish.at;
+      set["players.0.score"] = { correct: finish.score.correct[0], matches: finish.score.matches };
+      set["players.1.score"] = { correct: finish.score.correct[1], matches: finish.score.matches };
+    }
+    const r = await (await collections()).games.updateOne(
+      { _id: id, [`players.${player}.tokenHash`]: tokenHash, [`players.${player}.answers.${round}`]: null },
+      { $set: set },
+    );
+    return r.modifiedCount === 1;
+  },
+  async hitRate(key) {
+    const doc = await (await collections()).rateLimits.findOneAndUpdate(
+      { _id: key },
+      { $inc: { n: 1 }, $setOnInsert: { createdAt: new Date() } },
+      { upsert: true, returnDocument: "after" },
+    );
+    return doc?.n ?? 1;
+  },
 };
 
 // ---------- In-memory (local development only) ----------
@@ -243,12 +332,25 @@ type Mem = {
   users: Map<string, UserDoc>;
   loginTokens: Map<string, LoginTokenDoc>;
   sessions: Map<string, SessionDoc>;
+  games: Map<string, GameDoc>;
+  rates: Map<string, number>;
 };
 const memHolder = globalThis as unknown as { _kqMem?: Mem };
 function m(): Mem {
   if (!memHolder._kqMem) {
-    memHolder._kqMem = { quizzes: new Map(), results: [], users: new Map(), loginTokens: new Map(), sessions: new Map() };
+    memHolder._kqMem = {
+      quizzes: new Map(),
+      results: [],
+      users: new Map(),
+      loginTokens: new Map(),
+      sessions: new Map(),
+      games: new Map(),
+      rates: new Map(),
+    };
   }
+  // Older dev-server state (before games existed) may lack these.
+  memHolder._kqMem.games ??= new Map();
+  memHolder._kqMem.rates ??= new Map();
   return memHolder._kqMem;
 }
 const memoryStore: Store = {
@@ -325,6 +427,40 @@ const memoryStore: Store = {
   },
   async deleteSession(hash) {
     m().sessions.delete(hash);
+  },
+  // Copies in and out, so callers can't change stored data by accident (like a real DB).
+  async insertGame(doc) {
+    if (m().games.has(doc._id)) throw Object.assign(new Error("duplicate"), { code: 11000 });
+    m().games.set(doc._id, structuredClone(doc));
+  },
+  async getGame(id) {
+    const g = m().games.get(id);
+    return g ? structuredClone(g) : null;
+  },
+  async joinGame(id, player, at) {
+    const g = m().games.get(id);
+    if (!g || g.players.length >= 2) return false;
+    g.players.push(structuredClone(player));
+    g.joinedAt = at;
+    return true;
+  },
+  async saveRound(id, player, tokenHash, round, answer, finish) {
+    const p = m().games.get(id)?.players[player];
+    if (!p || p.tokenHash !== tokenHash || p.answers[round] !== null) return false;
+    p.answers[round] = { ...answer };
+    if (finish) {
+      const g = m().games.get(id) as GameDoc;
+      g.finishedAt = finish.at;
+      p.finishedAt = finish.at;
+      g.players[0].score = { correct: finish.score.correct[0], matches: finish.score.matches };
+      g.players[1].score = { correct: finish.score.correct[1], matches: finish.score.matches };
+    }
+    return true;
+  },
+  async hitRate(key) {
+    const n = (m().rates.get(key) ?? 0) + 1;
+    m().rates.set(key, n);
+    return n;
   },
 };
 
