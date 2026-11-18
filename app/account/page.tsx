@@ -308,7 +308,7 @@ export default function AccountPage() {
             <h2>Accounts are coming soon</h2>
             <p className="muted">For now, results are saved on the phone you made your quiz on.</p>
             {view.setup && view.setup.missing.length > 0 && (
-              <p className="feedback bad" style={{ textAlign: "left" }}>
+              <p className="feedback bad" style={{ display: "block", textAlign: "left", fontSize: 14 }}>
                 Setup note ({view.setup.env} deployment, only shown outside the live site): add{" "}
                 <strong>{view.setup.missing.join(", ")}</strong> in Vercel → Settings → Environment Variables for{" "}
                 <strong>{view.setup.env === "preview" ? "Preview" : view.setup.env}</strong>, then redeploy.
