@@ -1,7 +1,7 @@
 # KissAndQuiz — Project Context
 
 Living document. Update it at the end of every working session (see "Progress log").
-Last updated: 2026-11-18
+Last updated: 2026-11-18 (session 16)
 
 ---
 
@@ -20,6 +20,7 @@ Last updated: 2026-11-18
 | Brand name: **KissAndQuiz** | Decided |
 | Main domain: **kissandquiz.com** | Decided (buy it); optional redirect **kissnquiz.com** |
 | Global, flirty brand (no need to be "family-safe") | Decided by Raj |
+| **Whole site themed around the Kiss Wallet** (every game: play → win/lose kisses → settle when you meet). Conditions: wallet never blocks playing, stays light (small stakes, forgive, gifts), kisses never buyable | Decided by Raj, 2026-11-18 (session 16) |
 | Rejected names: KissAndFun (weaker recall, vague), Couply / Nuzzle / Twine / Twogether / Twosome / DuoPlay / Luvly / Saath (already used by existing apps or brands), Jodi (betting spam in India), Flirtle (reads as a dating app), TwoTango (a "Tango" couples app already exists) | Rejected |
 | Alternatives considered: Kissmet, Smooch, Nok Jhok, Aapas | Not chosen |
 
@@ -85,6 +86,19 @@ To verify still: domain purchase, Instagram/YouTube/X handles (`kissandquiz`), t
 | `app/games/would-you-rather/start/` | Creator flow (noindex): name → 10 × ("Your pick" → "Their pick?") with swap → review → share (WhatsApp, copy, native share, "Open my game", private link). Draft in localStorage `kq.wyr.create.v1` |
 | `app/w/[id]/page.tsx` | Game link, server-rendered preview "Riya wants to play Would You Rather with you 💞", noindex. Broken/expired/offline screens |
 | `components/reveal/` | `CreateGame` (creator flow), `RevealGame` (join, "Are you {A}?" guard, rounds, creator waiting/progress with 10 s polling, "game full", private-link restore), `RoundReveal` (both picks, both guesses ✅/❌, heart burst + confetti on match), `FinalResult` (winner/tie, X/10 lines, same-pick count, WhatsApp, rematch, all answers), `Choices` (two big option cards + OR badge), `WyrPreview` (landing art) |
+
+### Kiss Wallet (built 2026-11-18, session 16; on branch **`feat/kiss-wallet`**, commit `9f9e89a`, **not merged**)
+Rules: **`docs/KISS_WALLET_RULES.md`** (standard rules A1–G2 with reasons and sources); every number lives in `lib/wallet/rules.ts` (change both together).
+| Path | Purpose |
+| --- | --- |
+| `lib/wallet/rules.ts` | Constants (stakes 1/2/3/5, daily game cap 15, khata cap 99, gift cap 10/day, quiz bands 70%/40%, perfect bonus +1, rate card) + pure outcome functions `revealOutcome`, `quizOutcome`, `rateCardSplit`. Shared by browser and server |
+| `lib/wallet/server.ts` | `walletFromRequest` (header `x-wallet: <id>.<token>`, hash compare), `settleGame` (idempotent: history line IDs `wyr:<id>:<i>` / `quiz:<id>:<i>`; stops if line 0 exists), `walletView`/`khataView` |
+| `lib/wallet/client.ts` | Wallet on this phone (`kq.wallet.v1`), `ensureWallet(name)` (4 s timeout, never throws), private link `/wallet/#<id>.<token>`, header chip cache |
+| `lib/store.ts` | New collections `wallets` {name, tokenHash, lastActiveAt}, `khatas` {w:[a,b], owed:{walletId: n}} (id = sorted `a_b`), `kissLog` (history). TTL 180 days of inactivity. `GamePlayer.walletId`, `GameDoc.stake`, `QuizDoc.stake/walletId` (wallet IDs never sent to browsers) |
+| `app/api/wallet/` | POST create · GET summary · PATCH rename · DELETE (cascade). `khata/[kid]/` POST `received` (rate card item, only the person owed), `forgive` (1 or all), `gift` (1/2/3/5, adds to what *I* owe) |
+| `app/wallet/` | Wallet page: hero total, one card per partner (owes you / you owe, rate-card split, today x/15), Got kisses / Gift / Forgive, WhatsApp reminder, "Play {partner} for more kisses", history, keep-your-wallet private link, rename, delete, rules |
+| `components/wallet/` | `StakePicker` (review step of both creators), `KissOutcome` (final/score screens), `WalletChip` (header "💋 n") |
+Hooks: WYR create/join and quiz create/result send `x-wallet`; the round that finishes a WYR game settles kisses before replying; the first quiz result with a wallet settles. Games/quizzes made without a maker wallet (all older ones) show no kiss UI. Privacy page + README updated. New emoji: 1f917, 1f3ac, 1f45b, 1f607.
 
 ### Game 1: "How Well Do You Know Me?" (built, 2026-11-17)
 Flow: create, then share the link, then the partner plays, then sees the score, then sends it back and makes their own quiz. That last step is the viral loop.
@@ -201,7 +215,12 @@ Batch 1 lineup (proposed):
 
 Waves: **Wave 1 by Feb 7, 2027:** free 5 (HWDYKM, Love Calc+FLAMES, Truth or Dare Mild, Never Have I Ever, Would You Rather) + spicy 3 (Spicy Match, Spicy ToD, Naughty NHIE) — uses engines A, B, C, D only. **Wave 2 (Mar–Apr):** Ludo + Spicy Ludo, Antakshari, Who's More Likely, Would You Still Love Me If, Shoe Game, Dare Dice, Scratch Cards, Hot Seat, Fantasy Builder, 7-Day Challenge. Add a game only when the previous one is good.
 
-### Idea: Kiss Wallet / couple "khata" (Raj, 2026-11-18, session 10) — rated, waiting for go-ahead
+### Kiss Wallet rules v1 (2026-11-18, session 16) — built on `feat/kiss-wallet`
+Full rulebook: `docs/KISS_WALLET_RULES.md`. Summary: one free wallet per person (auto, no sign-up); one khata per partner with two numbers (owes you / you owe, not netted); creator picks **1/2/3/5 kisses** (default 1); two-player games: more correct guesses wins the stake, **tie = both win**, perfect score +1; couple quiz: **7–10 partner wins, 4–6 tie, 0–3 maker wins**; each game counts once; both players need different wallets; **15 kisses/day from games per partner, 99 max per khata**; gifts 1–5, max 10/day; **only the person owed can mark received (rate card: peck 1, hug + kiss 3, 10-second kiss 5, movie kiss 10) or forgive**; no interest/penalties/expiry/push nagging; never buyable or convertible (Online Gaming Act: free non-convertible tokens = social game; "play for", never "bet"); kisses only (spicy items later, 18+ area, mutual-yes only); 180-day auto-delete; delete wallet any time.
+Research used (session 16): Online Gaming Act 2025 "other stakes" definition + Rules 2026 (in force 1 May 2026; registration optional for most non-money social games; OGAI classifies games partly by betting/staking features); loss aversion ≈2× (keep stakes small); game-economy faucets/sinks (caps + paying as sinks); Octalysis warning on fear/loss mechanics; session 10 relationship research.
+Open: 18+ tick on the wallet? Merge two wallets of one person (WhatsApp browser + Chrome) via sign-in later. Payments note: under the 2026 Rules banks must verify registration before payments for *registered* social games; check with the lawyer before the Couple Pass.
+
+### Idea: Kiss Wallet / couple "khata" (Raj, 2026-11-18, session 10) — rated; **superseded by the built rules v1 above (session 16)**
 Raj's idea: a couple profile with a wallet. Whoever wins a game earns kisses owed by the partner; partners can bet 1, 2 or more kisses on a game; the paid tier adds other rewards (including sexual acts).
 **Rating (Claude): 6/10 as described, 8/10 with the fixes below.** Strongest idea so far for retention: it ties all games into one loop (play → win/bet → balance → come back to settle).
 - For: playfulness predicts relationship satisfaction (Proyer 2014, small effect); shared novel and arousing activities raise relationship quality (Aron et al. 2000); the "Love Bank" metaphor (Willard Harley) is widely used by counsellors; an open balance is a reason to return.
@@ -241,6 +260,8 @@ Name options: **Earn Kisses** (clear, global; Claude's pick for the game title/U
 Decisions for Raj: (1) name, (2) build the MVP now (before Most Likely To) or after the known games, (3) OK with the rate card + guard rails.
 
 ## 6. Next steps
+**Session 16 (current, priority order):** 1) **Raj:** open the Vercel preview of `feat/kiss-wallet` on two phones (one inside WhatsApp): make a Would You Rather game for 2 kisses → partner plays → both see the kiss card → open `/wallet/` → "Got kisses" / Gift / Forgive → private wallet link on the other browser; also a couple quiz with a stake. Preview needs `MONGODB_URI` for Preview. 2) Raj approves → merge to `main`. 3) Decide the open questions (18+ tick? home page "Kiss Wallet" hero/section?). 4) Then: home page + game pages themed around the wallet ("Play for kisses"), share-card image "Riya owes Raj 23 kisses", Most Likely To on the reveal engine (it gets kisses for free via `settleGame`). 5) Still open: buy kissandquiz.com, rotate the Atlas password, Search Console.
+
 **Session 15 (proposed, waiting for Raj):** 0) Raj decides on Earn Kisses: name, build now vs. after Most Likely To, rate card + guard rails. 1) If "now": build the Earn Kisses MVP (room `/k/<id>/`, Ask & Earn, approve/objection, wallet, Pay when we meet, rate card, share text), then Most Likely To. If "later": Most Likely To → Never Have I Ever → Truth or Dare, and Earn Kisses in January for Kiss Day (Feb 13). 2) Session 14 items still open: real-phone test of Would You Rather, rotate the Atlas password, buy kissandquiz.com.
 
 **Session 14 (current, priority order):** 1) **Raj:** play Would You Rather on production with two real phones (WhatsApp in-app browser + Chrome): create → send → partner joins → per-round reveal → final → creator reopens link. If `/w/<id>/` shows "Couldn't load this game", check Production `MONGODB_URI` and Atlas Network Access (`0.0.0.0/0`). 2) **Rotate the preview Atlas password** (it was shared in chat) and update Vercel. 3) ~~Merge `feat/would-you-rather` into `main`~~ (done 2026-11-18, Raj asked to push to main). 4) Optional: set `RATE_LIMIT_SALT` in Vercel (Production + Preview). 4) Next game on the reveal engine: **Most Likely To** (options `{A}` / `{B}` / "Both"), then Never Have I Ever, then Truth or Dare (deck engine), then two-way How Well Do You Know Me. 5) Still open from before: buy kissandquiz.com, score-card image, Search Console + sitemap, Kiss Wallet rules (scores are already stored per player for it).
@@ -266,6 +287,15 @@ Proposed order after Research 2:
 ---
 
 ## 7. Progress log
+### 2026-11-18 (session 16) — Kiss Wallet rules + wallet built
+- Raj asked (yes/no) whether to theme the whole site around a kiss wallet where winners earn and losers owe kisses. Claude: **yes**, with 3 conditions (never blocks playing, light not debt-like, never buyable). Raj then asked for researched standard rules and a wallet for every person.
+- Research: Online Gaming Act 2025 + Rules 2026 (other stakes, social game, OGAI classification), loss aversion, faucet/sink economy design, Octalysis loss/fear warning; reused session 10 relationship research.
+- Wrote **`docs/KISS_WALLET_RULES.md`** (rules A1–G2) and built the wallet on branch **`feat/kiss-wallet`** (`9f9e89a`): wallets/khatas/kissLog collections, wallet API, settlement for Would You Rather and the couple quiz, stake picker (1/2/3/5), kiss result card, wallet page, header chip, privacy page + README. Details in section 3 "Kiss Wallet".
+- Decisions (Claude, for Raj to review): balances not netted; tie = both win; only the owed person can mark received/forgive; a game counts only with two different wallets; old games/quizzes (no maker wallet) show no kiss UI; header "Account" link now desktop-only, wallet chip always visible; `.link-btn.full` min height 46 px (tap target).
+- Tested: `npm run build` passes, no TypeScript errors. API (92 checks): create/auth/wrong token, win/tie/perfect bonus/bad stake, game counted once + locked rounds, daily cap 15 with "capped" history line, same wallet / no wallet not counted, received/forgive/gift rules + caps, stranger blocked, quiz bands 8/5/2/10 of 10, second quiz attempt not counted, rename visible to partner, delete cascade. Browser (Playwright, two isolated Chrome profiles) at **360, 390 and 1440 px, 30 checks each**: empty wallet, stake picker, share text, join badge, B wins 3, A sees "Riya wins 3", wallet page, rate card (movie disabled), history, gift, A can't mark received, private wallet link in a third browser, rules, quiz with stake + kiss card + wallet; no horizontal scroll, tap targets ≥ 38 px; no console errors. Old `/q/` quiz without wallet and legacy `/play/#` link: no kiss UI, no errors.
+- Not tested: real Atlas cluster and real phones / WhatsApp in-app browser.
+- Next: Raj tests the preview on two phones and approves the merge.
+
 ### 2026-11-18 (session 15) — "Earn Kisses" game designed
 - Raj's idea: "Earn Kisses": partners send each other questions, truth or dare, challenges and other tasks over the link; answers earn kisses into a kiss wallet, paid when they meet.
 - Research: competitor couple apps with tasks → points → coupons (Kyupid, Favour, Cutest Couple, BetweenUs, Couple Coupons/Couple Game, Couple Cards, Hint of Us); all app installs, none web-link, none "settle when you meet". Reused session 10 research on rewards in relationships and the Online Gaming Act.
