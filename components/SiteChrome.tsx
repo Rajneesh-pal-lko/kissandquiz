@@ -1,6 +1,8 @@
 // Site-wide header and footer. Plain components (no hooks), usable from server and client pages.
+// The wallet chip is a small client component inside.
 import Link from "next/link";
 import { Emoji } from "./Emoji";
+import WalletChip from "./wallet/WalletChip";
 
 type HeaderProps = {
   /** Replace "My results" with a back link, e.g. { href: "/", label: "← All games" }. */
@@ -29,11 +31,12 @@ export function SiteHeader({ back, hideCta }: HeaderProps) {
               <Link href="/results/" className="nav-link wide-only">
                 My results
               </Link>
-              <Link href="/account/" className="nav-link">
+              <Link href="/account/" className="nav-link wide-only">
                 Account
               </Link>
             </>
           )}
+          <WalletChip />
           {!hideCta && (
             <Link href="/create/" className="nav-cta">
               Play free
@@ -61,6 +64,7 @@ export function SiteFooter() {
           <Link href="/games/how-well-do-you-know-me/">Couple quiz</Link>
           <Link href="/games/would-you-rather/">Would You Rather</Link>
           <Link href="/create/">Create a quiz</Link>
+          <Link href="/wallet/">Kiss Wallet</Link>
           <Link href="/results/">My results</Link>
           <Link href="/account/">My account</Link>
           <Link href="/privacy/">Privacy</Link>

@@ -6,6 +6,8 @@ import { configFor } from "@/lib/reveal/configs";
 import { GAME_ID_RE, cleanAnswer, nextRound, scoreOf } from "@/lib/reveal/rules";
 import { playerFor, viewFor } from "@/lib/reveal/view";
 import { hashToken, store, storeAvailable, type GameDoc } from "@/lib/store";
+import { revealOutcome } from "@/lib/wallet/rules";
+import { settleGame } from "@/lib/wallet/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -58,6 +60,15 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     if (finish) {
       next.finishedAt = now;
       next.players[me].finishedAt = now;
+      // Kiss Wallet: add the kisses once, before replying, so the wallet is right when they open it.
+      if (cfg.scoring) {
+        await settleGame({
+          wallets: [game.players[0].walletId, game.players[1]?.walletId],
+          outcome: revealOutcome(finish.score.correct, game.q.length, game.stake ?? 1),
+          game: { type: "wyr", id },
+          at: now,
+        });
+      }
     }
     return NextResponse.json({ game: viewFor(next, me) }, { headers: NO_STORE });
   } catch (err) {

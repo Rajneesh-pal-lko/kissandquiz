@@ -32,6 +32,12 @@ export default function PrivacyPage() {
             a scrambled (hashed) copy of it.
           </li>
           <li>
+            <strong>Kiss Wallet:</strong> the name you play with, and for each partner you play with a shared
+            &quot;khata&quot;: how many kisses each of you owes, and a history (which game, how many kisses, when). Your
+            wallet&apos;s private key stays on your phone; we store only a hashed copy. Only you and that partner can see
+            your khata.
+          </li>
+          <li>
             <strong>Spam protection:</strong> a scrambled (hashed) version of your IP address when you start or join a
             game, kept for up to 2 hours.
           </li>
@@ -56,6 +62,7 @@ export default function PrivacyPage() {
         <h2>How long we keep it</h2>
         <ul>
           <li>Quizzes, results and two-player games are deleted automatically after 6 months.</li>
+          <li>Kiss Wallets and khatas are deleted after 6 months without any activity; history lines after 6 months.</li>
           <li>Sign-in links expire after 15 minutes; sign-ins last 30 days.</li>
           <li>Your account stays until you delete it.</li>
         </ul>
@@ -65,6 +72,10 @@ export default function PrivacyPage() {
           <li>
             Delete your account any time from <Link href="/account/">My account</Link>. This also deletes the quizzes
             saved in it and their results. Two-player games are not linked to accounts; they are deleted after 6 months.
+          </li>
+          <li>
+            Delete your Kiss Wallet any time from the <Link href="/wallet/">Kiss Wallet</Link> page. This deletes your khatas
+            and their history for both of you.
           </li>
           <li>Questions or requests: contact the site owner (contact email coming soon).</li>
         </ul>

@@ -5,6 +5,7 @@ import { tooMany } from "@/lib/rateLimit";
 import { GAME_ID_RE, cleanName } from "@/lib/reveal/rules";
 import { viewFor } from "@/lib/reveal/view";
 import { hashToken, newSecret, store, storeAvailable, type GamePlayer } from "@/lib/store";
+import { walletFromRequest } from "@/lib/wallet/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,9 +34,16 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     if (!game) return NextResponse.json({ error: "not_found" }, { status: 404 });
     if (game.players.length >= 2) return NextResponse.json({ error: "full" }, { status: 409 });
 
+    const wallet = await walletFromRequest(req); // optional Kiss Wallet
     const token = newSecret();
     const now = new Date();
-    const player: GamePlayer = { name, tokenHash: hashToken(token), answers: game.q.map(() => null), joinedAt: now };
+    const player: GamePlayer = {
+      name,
+      tokenHash: hashToken(token),
+      answers: game.q.map(() => null),
+      joinedAt: now,
+      ...(wallet ? { walletId: wallet._id } : {}),
+    };
     if (!(await store().joinGame(id, player, now))) {
       return NextResponse.json({ error: "full" }, { status: 409 }); // someone joined a moment earlier
     }

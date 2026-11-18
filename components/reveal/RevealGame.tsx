@@ -12,6 +12,8 @@ import { AnimatedEmoji, Emoji, WhatsAppIcon } from "@/components/Emoji";
 import { SiteHeader } from "@/components/SiteChrome";
 import Choices from "@/components/reveal/Choices";
 import FinalResult from "@/components/reveal/FinalResult";
+import { ensureWallet, walletHeader } from "@/lib/wallet/client";
+import { kisses } from "@/lib/wallet/rules";
 import RoundReveal from "@/components/reveal/RoundReveal";
 import { configFor } from "@/lib/reveal/configs";
 import { REMATCH_KEY, forgetMyGame, getMyGame, saveMyGame, updateMyGame } from "@/lib/reveal/myGames";
@@ -89,6 +91,7 @@ export default function RevealGame({ type, id, creator }: Props) {
   const [ui, setUi] = useState<Ui>({ reveal: null, pending: null });
   const [tap, setTap] = useState<{ round: number; sub: "pick" | "guess"; i: number } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [joinStake, setJoinStake] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const linkToken = useRef<string | null>(null);
   const uiKey = `kq.reveal.ui.${id}`;
@@ -133,6 +136,7 @@ export default function RevealGame({ type, id, creator }: Props) {
           if (fromLink) setNotice("That private link doesn't match this game.");
         }
         setToken(null);
+        setJoinStake(game.kiss ? game.stake ?? 1 : 0);
         setScreen({ kind: game.full ? "full" : "join" });
       } catch {
         setScreen({ kind: "offline" });
@@ -199,9 +203,10 @@ export default function RevealGame({ type, id, creator }: Props) {
     setBusy(true);
     setError("");
     try {
+      await ensureWallet(clean); // Kiss Wallet, optional (rule B4)
       const res = await fetch(`/api/game/${id}/join/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...walletHeader() },
         body: JSON.stringify({ name: clean }),
       });
       if (res.status === 409) return setScreen({ kind: "full" });
@@ -312,6 +317,7 @@ export default function RevealGame({ type, id, creator }: Props) {
 
   if (screen.kind === "join" || screen.kind === "confirm") {
     const clean = name.replace(/\s+/g, " ").trim();
+    const stake = screen.kind === "join" ? joinStake : 0;
     return (
       <>
         <SiteHeader hideCta />
@@ -332,6 +338,11 @@ export default function RevealGame({ type, id, creator }: Props) {
                   {cfg.rounds} quick rounds. Pick what you&apos;d rather do, then guess what {creator} picked. See who knows
                   who better.
                 </p>
+                {stake > 0 && (
+                  <p className="stake-badge rise d2">
+                    <Emoji code="1f48b" size={22} /> Playing for {kisses(stake)} · winner collects when you meet
+                  </p>
+                )}
               </section>
               <div className="card flow-card rise d3">
                 {notice && <p className="feedback bad">{notice}</p>}
@@ -411,6 +422,8 @@ export default function RevealGame({ type, id, creator }: Props) {
             mine={mine}
             theirs={theirs}
             score={g.score}
+            stake={g.kiss ? g.stake : 0}
+            walletCounted={!!g.walletCounted}
             names={names}
             link={link}
             onPlayAgain={() => playAgain(myName, otherName)}

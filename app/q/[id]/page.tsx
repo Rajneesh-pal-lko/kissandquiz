@@ -42,5 +42,5 @@ export default async function QuizPage({ params }: Params) {
   const { quiz, error } = await findQuiz(id);
   if (error) return <BrokenLink reason="offline" />;
   if (!quiz) return <BrokenLink reason={QUIZ_ID_RE.test(id) ? "expired" : "broken"} />;
-  return <ShortLinkGame id={id} quiz={{ n: quiz.n, a: quiz.a }} />;
+  return <ShortLinkGame id={id} quiz={{ n: quiz.n, a: quiz.a }} stake={quiz.walletId ? quiz.stake ?? 1 : undefined} />;
 }

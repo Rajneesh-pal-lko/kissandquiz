@@ -1,4 +1,5 @@
-// POST /api/game  { type, name, q, answers: [{pick, guess}, …] }  →  { id, token }
+// POST /api/game  { type, name, q, answers: [{pick, guess}, …], stake? }  →  { id, token }
+// Optional header x-wallet links the creator's Kiss Wallet (never required).
 // Creates a two-player reveal game (Would You Rather, …). The creator answers every round
 // up front. `token` is the creator's secret; only its hash is stored.
 import { NextResponse } from "next/server";
@@ -6,6 +7,8 @@ import { tooMany } from "@/lib/rateLimit";
 import { configFor } from "@/lib/reveal/configs";
 import { cleanAnswers, cleanName, cleanQuestionList } from "@/lib/reveal/rules";
 import { hashToken, newQuizId, newSecret, store, storeAvailable } from "@/lib/store";
+import { cleanStake } from "@/lib/wallet/rules";
+import { walletFromRequest } from "@/lib/wallet/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,7 +19,7 @@ const CREATE_LIMIT = 30;
 export async function POST(req: Request) {
   if (!storeAvailable()) return NextResponse.json({ error: "unavailable" }, { status: 503 });
 
-  let body: { type?: unknown; name?: unknown; q?: unknown; answers?: unknown };
+  let body: { type?: unknown; name?: unknown; q?: unknown; answers?: unknown; stake?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -37,6 +40,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "server" }, { status: 500 });
   }
 
+  const wallet = await walletFromRequest(req);
   const token = newSecret();
   const now = new Date();
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -46,7 +50,10 @@ export async function POST(req: Request) {
         _id: id,
         type: cfg.type,
         q,
-        players: [{ name, tokenHash: hashToken(token), answers, joinedAt: now, finishedAt: now }],
+        players: [
+          { name, tokenHash: hashToken(token), answers, joinedAt: now, finishedAt: now, ...(wallet ? { walletId: wallet._id } : {}) },
+        ],
+        stake: cleanStake(body.stake),
         createdAt: now,
       });
       return NextResponse.json({ id, token }, { status: 201 });

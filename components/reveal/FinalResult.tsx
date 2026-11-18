@@ -8,6 +8,8 @@ import { AnimatedEmoji, Emoji, WhatsAppIcon } from "@/components/Emoji";
 import { confetti } from "@/components/fx";
 import { fill, initial, lcFirst } from "@/lib/reveal/rules";
 import type { Answer, RevealConfig, Score } from "@/lib/reveal/types";
+import KissOutcome from "@/components/wallet/KissOutcome";
+import { kisses, revealOutcome, totals } from "@/lib/wallet/rules";
 
 type Props = {
   cfg: RevealConfig;
@@ -16,12 +18,15 @@ type Props = {
   mine: (Answer | null)[];
   theirs: (Answer | null)[];
   score: Score;
+  /** Kisses the game was played for (0 = older game, no Kiss Wallet), and whether both wallets counted it. */
+  stake: number;
+  walletCounted: boolean;
   names: { A: string; B: string | null };
   link: string;
   onPlayAgain: () => void;
 };
 
-export default function FinalResult({ cfg, me, q, mine, theirs, score, names, link, onPlayAgain }: Props) {
+export default function FinalResult({ cfg, me, q, mine, theirs, score, stake, walletCounted, names, link, onPlayAgain }: Props) {
   const [showAll, setShowAll] = useState(false);
   const fired = useRef(false);
   const other = me === 0 ? 1 : 0;
@@ -45,8 +50,17 @@ export default function FinalResult({ cfg, me, q, mine, theirs, score, names, li
 
   const winnerLine = result === "me" ? "You win 💘" : result === "them" ? `${otherName} wins 💘` : "It's a tie 💞";
   const sendWinner = result === "me" ? "I win 😎" : result === "them" ? "You win this time 😏" : "It's a tie 💞";
+  const outcome = revealOutcome(score.correct, total, stake);
+  const kissT = totals(outcome);
+  const kissLine = !stake
+    ? ""
+    : outcome.winner === "tie"
+      ? `We both win ${kisses(kissT[me])} 😘`
+      : outcome.winner === me
+        ? `You owe me ${kisses(kissT[me])} 💋`
+        : `I owe you ${kisses(kissT[other])} 💋`;
   const shareText = cfg.scoring
-    ? `${otherName}, I guessed ${myCorrect}/${total} of your ${cfg.title} picks and you guessed ${theirCorrect}/${total} of mine. ${sendWinner} We picked the same thing ${score.matches}/${total} times. See all our answers: ${link}`
+    ? `${otherName}, I guessed ${myCorrect}/${total} of your ${cfg.title} picks and you guessed ${theirCorrect}/${total} of mine. ${sendWinner}${kissLine ? ` ${kissLine}` : ""} We picked the same thing ${score.matches}/${total} times. See all our answers: ${link}`
     : `We picked the same thing ${score.matches}/${total} times on ${cfg.title} 💞 See all our answers: ${link}`;
 
   return (
@@ -86,6 +100,7 @@ export default function FinalResult({ cfg, me, q, mine, theirs, score, names, li
             <p className="score-lines">
               {otherName} guessed {theirCorrect}/{total} of your picks · You guessed {myCorrect}/{total} of theirs
             </p>
+            {stake > 0 && <KissOutcome outcome={outcome} me={me} otherName={otherName} counted={walletCounted} />}
           </>
         )}
         <p className="same-count">

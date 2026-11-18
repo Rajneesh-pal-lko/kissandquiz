@@ -71,6 +71,10 @@ export type GameView = {
   creator: string;
   full: boolean;
   rounds: number;
+  /** Kisses the game is played for (Kiss Wallet). */
+  stake: number;
+  /** The game maker has a Kiss Wallet, so kisses can count (false on older games). */
+  kiss: boolean;
   // Players only:
   partner?: string | null;
   q?: number[];
@@ -84,4 +88,6 @@ export type GameView = {
   done?: boolean;
   /** Only when both finished. */
   score?: Score;
+  /** Both players have different Kiss Wallets, so this game's kisses are counted. */
+  walletCounted?: boolean;
 };

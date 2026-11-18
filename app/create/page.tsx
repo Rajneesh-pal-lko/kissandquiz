@@ -10,6 +10,9 @@ import { CATEGORY_UI, LETTERS } from "@/lib/ui";
 import { NAME_MAX, buildPlayUrl } from "@/lib/quizLink";
 import { load, remove, save } from "@/lib/storage";
 import { addMyQuiz, resultsUrl } from "@/lib/myQuizzes";
+import StakePicker from "@/components/wallet/StakePicker";
+import { ensureWallet, walletHeader } from "@/lib/wallet/client";
+import { DEFAULT_STAKE, cleanStake, kisses } from "@/lib/wallet/rules";
 
 type Step = "name" | "questions" | "review" | "share";
 
@@ -23,6 +26,8 @@ type Draft = {
   /** Set when the link is a short /q/<id>/ link saved on the server. */
   quizId?: string;
   token?: string;
+  /** Kisses the quiz is played for (Kiss Wallet). */
+  stake?: number;
 };
 
 const DRAFT_KEY = "kq.create.v1";
@@ -95,6 +100,7 @@ export default function CreatePage() {
   const answeredCount = d.answers.filter((a) => a !== null).length;
   const allAnswered = answeredCount === total;
   const trimmedName = d.name.trim();
+  const stake = cleanStake(d.stake ?? DEFAULT_STAKE);
 
   function update(patch: Partial<Draft>) {
     setD((prev) => (prev ? { ...prev, ...patch } : prev));
@@ -188,10 +194,11 @@ export default function CreatePage() {
     setCreating(true);
     try {
       // Short link saved on the server, so the creator can see the partner's result.
+      await ensureWallet(trimmedName); // Kiss Wallet, optional (rule B4)
       const res = await fetch("/api/quiz/", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ n: trimmedName, a: pairs }),
+        headers: { "Content-Type": "application/json", ...walletHeader() },
+        body: JSON.stringify({ n: trimmedName, a: pairs, stake }),
       });
       if (!res.ok) throw new Error(`status ${res.status}`);
       const { id, token } = (await res.json()) as { id: string; token: string };
@@ -235,7 +242,9 @@ export default function CreatePage() {
     }
   }
 
-  const shareText = `How well do you know me? 💘 Take my quiz and see your score: ${d.link}`;
+  const shareText = d.quizId
+    ? `How well do you know me? 💘 Playing for ${kisses(stake)}: get 7 or more right and you win them 😘 ${d.link}`
+    : `How well do you know me? 💘 Take my quiz and see your score: ${d.link}`;
 
   async function nativeShare() {
     if (!d) return;
@@ -354,6 +363,8 @@ export default function CreatePage() {
                 );
               })}
             </ol>
+            <StakePicker value={stake} onChange={(n) => update({ stake: n })} />
+            <p className="muted stake-note center">Quiz: 7+ right and your partner wins, 4–6 is a tie, 0–3 and you win.</p>
             <button className="btn" onClick={makeLink} disabled={!allAnswered || creating}>
               {creating ? "Creating your link…" : "Create my quiz link"}
               {!creating && <Emoji code="1f498" size={26} />}

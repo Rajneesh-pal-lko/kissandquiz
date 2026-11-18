@@ -1,8 +1,11 @@
-// POST /api/quiz/<id>/result  { guesses, partner? }  →  { score, total }
+// POST /api/quiz/<id>/result  { guesses, partner? }  →  { score, total, walletCounted }
+// Optional header x-wallet: the partner's Kiss Wallet. The first attempt with a wallet settles kisses.
 // Saves the partner's attempt. The score is computed here, not trusted from the browser.
 import { NextResponse } from "next/server";
 import { QUIZ_ID_RE, cleanGuesses, cleanName, scoreOf } from "@/lib/quizRules";
 import { MAX_RESULTS_PER_QUIZ, store, storeAvailable } from "@/lib/store";
+import { quizOutcome } from "@/lib/wallet/rules";
+import { counts, settleGame, walletFromRequest } from "@/lib/wallet/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,7 +39,16 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
       total: quiz.a.length,
       createdAt: new Date(),
     });
-    return NextResponse.json({ score, total: quiz.a.length }, { status: 201 });
+    const wallet = await walletFromRequest(req);
+    const walletCounted = counts(quiz.walletId, wallet?._id);
+    if (walletCounted) {
+      await settleGame({
+        wallets: [quiz.walletId, wallet!._id],
+        outcome: quizOutcome(score, quiz.a.length, quiz.stake ?? 1),
+        game: { type: "quiz", id },
+      });
+    }
+    return NextResponse.json({ score, total: quiz.a.length, walletCounted }, { status: 201 });
   } catch (err) {
     console.error("save result failed", err);
     return NextResponse.json({ error: "server" }, { status: 500 });

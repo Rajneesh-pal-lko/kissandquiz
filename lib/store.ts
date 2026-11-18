@@ -14,6 +14,9 @@ export type QuizDoc = {
   a: Pair[]; // [questionIndex, answerIndex]
   ownerHash: string; // sha256 of the creator's secret token
   ownerUserId?: string; // set when the creator has an account
+  /** Kiss Wallet: kisses this quiz is played for, and the maker's wallet (optional). */
+  stake?: number;
+  walletId?: string;
   createdAt: Date;
 };
 
@@ -51,6 +54,8 @@ export type GamePlayer = {
   finishedAt?: Date;
   /** Set when both players have finished (for the future Kiss Wallet). */
   score?: { correct: number; matches: number };
+  /** Kiss Wallet of this player, if they have one. Never sent to the browser. */
+  walletId?: string;
 };
 
 /** A two-player reveal game. players[0] = creator (A), players[1] = partner (B). */
@@ -62,6 +67,44 @@ export type GameDoc = {
   createdAt: Date;
   joinedAt?: Date; // when B joined
   finishedAt?: Date; // when both had answered every round
+  /** Kisses this game is played for (Kiss Wallet rule C1). Missing on older games = 1. */
+  stake?: number;
+};
+
+/** Kiss Wallet (docs/KISS_WALLET_RULES.md). One per person, no sign-up. Only the secret's hash is stored. */
+export type WalletDoc = {
+  _id: string; // 12 chars
+  name: string;
+  tokenHash: string;
+  createdAt: Date;
+  lastActiveAt: Date;
+};
+
+/** A khata = the shared kiss balance between two wallets. `owed[w]` = kisses owed TO wallet w. */
+export type KhataDoc = {
+  _id: string; // khataId(a, b)
+  w: [string, string];
+  owed: Record<string, number>;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type KissKind = "win" | "tie" | "bonus" | "gift" | "received" | "forgive";
+
+/** One line of khata history. `amount` changes owed[to] (negative = paid or forgiven). */
+export type KissLogDoc = {
+  _id: string; // deterministic for game results (one per game), random otherwise
+  khata: string;
+  to: string;
+  by: string;
+  amount: number;
+  kind: KissKind;
+  game?: { type: "wyr" | "quiz"; id: string };
+  /** Rate-card item for "received", e.g. "Movie kiss". */
+  label?: string;
+  /** The daily or khata limit cut this earning (amount may be 0). */
+  capped?: boolean;
+  createdAt: Date;
 };
 
 /** Fixed-window request counter for rate limits. `_id` = action:ipHash:window. */
@@ -94,6 +137,10 @@ export function newQuizId(): string {
 
 export function newUserId(): string {
   return randomId(16);
+}
+
+export function newWalletId(): string {
+  return randomId(12);
 }
 
 /** Random secret for owner tokens, login links and sessions. */
@@ -154,6 +201,25 @@ interface Store {
   ): Promise<boolean>;
   /** Count one request in a rate-limit window and return the new count. */
   hitRate(key: string): Promise<number>;
+  // kiss wallet
+  insertWallet(doc: WalletDoc): Promise<void>;
+  getWallet(id: string): Promise<WalletDoc | null>;
+  updateWallet(id: string, patch: Partial<Pick<WalletDoc, "name" | "lastActiveAt">>): Promise<void>;
+  /** Delete the wallet, every khata it is in, and their history. */
+  deleteWalletCascade(id: string): Promise<void>;
+  /** Create the khata if missing; always bumps updatedAt. */
+  ensureKhata(id: string, w: [string, string], at: Date): Promise<void>;
+  getKhata(id: string): Promise<KhataDoc | null>;
+  listKhatas(walletId: string): Promise<KhataDoc[]>;
+  /** owed[to] += amount (amount > 0). */
+  addOwed(id: string, to: string, amount: number, at: Date): Promise<void>;
+  /** owed[to] -= amount, only if owed[to] >= amount (atomic). False if not enough. */
+  takeOwed(id: string, to: string, amount: number, at: Date): Promise<boolean>;
+  /** False if a line with this _id already exists (a game is only counted once). */
+  insertKissLog(doc: KissLogDoc): Promise<boolean>;
+  listKissLog(khata: string, limit: number): Promise<KissLogDoc[]>;
+  /** Sum of amounts in a khata for lines matching `to`/`by` and kinds, since a date. */
+  sumKissLog(khata: string, match: { to?: string; by?: string }, kinds: KissKind[], since: Date): Promise<number>;
 }
 
 const minutesAgo = (m: number) => new Date(Date.now() - m * 60 * 1000);
@@ -171,6 +237,9 @@ type Cols = {
   sessions: Collection<SessionDoc>;
   games: Collection<GameDoc>;
   rateLimits: Collection<RateDoc>;
+  wallets: Collection<WalletDoc>;
+  khatas: Collection<KhataDoc>;
+  kissLog: Collection<KissLogDoc>;
 };
 
 async function collections(): Promise<Cols> {
@@ -197,6 +266,9 @@ async function collections(): Promise<Cols> {
     sessions: db.collection<SessionDoc>("sessions"),
     games: db.collection<GameDoc>("games"),
     rateLimits: db.collection<RateDoc>("rateLimits"),
+    wallets: db.collection<WalletDoc>("wallets"),
+    khatas: db.collection<KhataDoc>("khatas"),
+    kissLog: db.collection<KissLogDoc>("kissLog"),
   };
   if (!g._kqIndexes) {
     const day = 24 * 60 * 60;
@@ -211,6 +283,12 @@ async function collections(): Promise<Cols> {
       c.sessions.createIndex({ createdAt: 1 }, { expireAfterSeconds: SESSION_DAYS * day }),
       c.games.createIndex({ createdAt: 1 }, { expireAfterSeconds: RETENTION_DAYS * day }),
       c.rateLimits.createIndex({ createdAt: 1 }, { expireAfterSeconds: RATE_KEEP_SECONDS }),
+      // Kiss Wallet: deleted after 180 days without activity (rule F4).
+      c.wallets.createIndex({ lastActiveAt: 1 }, { expireAfterSeconds: RETENTION_DAYS * day }),
+      c.khatas.createIndex({ updatedAt: 1 }, { expireAfterSeconds: RETENTION_DAYS * day }),
+      c.khatas.createIndex({ w: 1 }),
+      c.kissLog.createIndex({ createdAt: 1 }, { expireAfterSeconds: RETENTION_DAYS * day }),
+      c.kissLog.createIndex({ khata: 1, createdAt: -1 }),
     ])
       .then(() => undefined)
       .catch(() => {
@@ -330,6 +408,66 @@ const mongoStore: Store = {
     );
     return doc?.n ?? 1;
   },
+  async insertWallet(doc) {
+    await (await collections()).wallets.insertOne(doc);
+  },
+  async getWallet(id) {
+    return (await collections()).wallets.findOne({ _id: id });
+  },
+  async updateWallet(id, patch) {
+    await (await collections()).wallets.updateOne({ _id: id }, { $set: patch });
+  },
+  async deleteWalletCascade(id) {
+    const c = await collections();
+    const ids = (await c.khatas.find({ w: id }, { projection: { _id: 1 } }).toArray()).map((k) => k._id);
+    await c.kissLog.deleteMany({ khata: { $in: ids } });
+    await c.khatas.deleteMany({ _id: { $in: ids } });
+    await c.wallets.deleteOne({ _id: id });
+  },
+  async ensureKhata(id, w, at) {
+    await (await collections()).khatas.updateOne(
+      { _id: id },
+      { $setOnInsert: { w, owed: { [w[0]]: 0, [w[1]]: 0 }, createdAt: at }, $set: { updatedAt: at } },
+      { upsert: true },
+    );
+  },
+  async getKhata(id) {
+    return (await collections()).khatas.findOne({ _id: id });
+  },
+  async listKhatas(walletId) {
+    return (await collections()).khatas.find({ w: walletId }).sort({ updatedAt: -1 }).limit(20).toArray();
+  },
+  async addOwed(id, to, amount, at) {
+    await (await collections()).khatas.updateOne({ _id: id }, { $inc: { [`owed.${to}`]: amount }, $set: { updatedAt: at } });
+  },
+  async takeOwed(id, to, amount, at) {
+    const r = await (await collections()).khatas.updateOne(
+      { _id: id, [`owed.${to}`]: { $gte: amount } },
+      { $inc: { [`owed.${to}`]: -amount }, $set: { updatedAt: at } },
+    );
+    return r.modifiedCount === 1;
+  },
+  async insertKissLog(doc) {
+    try {
+      await (await collections()).kissLog.insertOne(doc);
+      return true;
+    } catch (err) {
+      if ((err as { code?: number }).code === 11000) return false;
+      throw err;
+    }
+  },
+  async listKissLog(khata, limit) {
+    return (await collections()).kissLog.find({ khata }).sort({ createdAt: -1 }).limit(limit).toArray();
+  },
+  async sumKissLog(khata, match, kinds, since) {
+    const rows = await (await collections()).kissLog
+      .aggregate<{ n: number }>([
+        { $match: { khata, ...match, kind: { $in: kinds }, createdAt: { $gt: since } } },
+        { $group: { _id: null, n: { $sum: "$amount" } } },
+      ])
+      .toArray();
+    return rows[0]?.n ?? 0;
+  },
 };
 
 // ---------- In-memory (local development only) ----------
@@ -341,6 +479,9 @@ type Mem = {
   sessions: Map<string, SessionDoc>;
   games: Map<string, GameDoc>;
   rates: Map<string, number>;
+  wallets: Map<string, WalletDoc>;
+  khatas: Map<string, KhataDoc>;
+  kissLog: Map<string, KissLogDoc>;
 };
 const memHolder = globalThis as unknown as { _kqMem?: Mem };
 function m(): Mem {
@@ -353,11 +494,17 @@ function m(): Mem {
       sessions: new Map(),
       games: new Map(),
       rates: new Map(),
+      wallets: new Map(),
+      khatas: new Map(),
+      kissLog: new Map(),
     };
   }
   // Older dev-server state (before games existed) may lack these.
   memHolder._kqMem.games ??= new Map();
   memHolder._kqMem.rates ??= new Map();
+  memHolder._kqMem.wallets ??= new Map();
+  memHolder._kqMem.khatas ??= new Map();
+  memHolder._kqMem.kissLog ??= new Map();
   return memHolder._kqMem;
 }
 const memoryStore: Store = {
@@ -468,6 +615,78 @@ const memoryStore: Store = {
     const n = (m().rates.get(key) ?? 0) + 1;
     m().rates.set(key, n);
     return n;
+  },
+  async insertWallet(doc) {
+    if (m().wallets.has(doc._id)) throw Object.assign(new Error("duplicate"), { code: 11000 });
+    m().wallets.set(doc._id, structuredClone(doc));
+  },
+  async getWallet(id) {
+    const w = m().wallets.get(id);
+    return w ? structuredClone(w) : null;
+  },
+  async updateWallet(id, patch) {
+    const w = m().wallets.get(id);
+    if (w) Object.assign(w, patch);
+  },
+  async deleteWalletCascade(id) {
+    for (const [kid, k] of m().khatas) {
+      if (!k.w.includes(id)) continue;
+      for (const [lid, l] of m().kissLog) if (l.khata === kid) m().kissLog.delete(lid);
+      m().khatas.delete(kid);
+    }
+    m().wallets.delete(id);
+  },
+  async ensureKhata(id, w, at) {
+    const k = m().khatas.get(id);
+    if (k) k.updatedAt = at;
+    else m().khatas.set(id, { _id: id, w: [...w], owed: { [w[0]]: 0, [w[1]]: 0 }, createdAt: at, updatedAt: at });
+  },
+  async getKhata(id) {
+    const k = m().khatas.get(id);
+    return k ? structuredClone(k) : null;
+  },
+  async listKhatas(walletId) {
+    return [...m().khatas.values()]
+      .filter((k) => k.w.includes(walletId))
+      .sort((x, y) => y.updatedAt.getTime() - x.updatedAt.getTime())
+      .map((k) => structuredClone(k));
+  },
+  async addOwed(id, to, amount, at) {
+    const k = m().khatas.get(id);
+    if (!k) return;
+    k.owed[to] = (k.owed[to] ?? 0) + amount;
+    k.updatedAt = at;
+  },
+  async takeOwed(id, to, amount, at) {
+    const k = m().khatas.get(id);
+    if (!k || (k.owed[to] ?? 0) < amount) return false;
+    k.owed[to] -= amount;
+    k.updatedAt = at;
+    return true;
+  },
+  async insertKissLog(doc) {
+    if (m().kissLog.has(doc._id)) return false;
+    m().kissLog.set(doc._id, structuredClone(doc));
+    return true;
+  },
+  async listKissLog(khata, limit) {
+    return [...m().kissLog.values()]
+      .filter((l) => l.khata === khata)
+      .sort((x, y) => y.createdAt.getTime() - x.createdAt.getTime())
+      .slice(0, limit)
+      .map((l) => structuredClone(l));
+  },
+  async sumKissLog(khata, match, kinds, since) {
+    return [...m().kissLog.values()]
+      .filter(
+        (l) =>
+          l.khata === khata &&
+          (!match.to || l.to === match.to) &&
+          (!match.by || l.by === match.by) &&
+          kinds.includes(l.kind) &&
+          l.createdAt > since,
+      )
+      .reduce((n, l) => n + l.amount, 0);
   },
 };
 

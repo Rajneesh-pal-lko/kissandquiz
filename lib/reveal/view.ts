@@ -39,6 +39,8 @@ export function viewFor(game: GameDoc, me: 0 | 1 | null): GameView {
     creator: game.players[0]?.name ?? "",
     full: game.players.length >= 2,
     rounds: game.q.length,
+    stake: game.stake ?? 1,
+    kiss: !!game.players[0]?.walletId,
   };
   if (me === null || !cfg || !game.players[me]) return { ...base, me: null };
 
@@ -62,6 +64,7 @@ export function viewFor(game: GameDoc, me: 0 | 1 | null): GameView {
       return pair ? cfg.match(pair[0].pick, pair[1].pick) : null;
     }),
     done,
+    walletCounted: !!game.players[0]?.walletId && !!game.players[1]?.walletId && game.players[0].walletId !== game.players[1].walletId,
   };
 
   if (cfg.reveal === "full") {

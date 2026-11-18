@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { cleanName, cleanPairs } from "@/lib/quizRules";
 import { hashToken, newOwnerToken, newQuizId, store, storeAvailable } from "@/lib/store";
+import { cleanStake } from "@/lib/wallet/rules";
+import { walletFromRequest } from "@/lib/wallet/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,7 +13,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   if (!storeAvailable()) return NextResponse.json({ error: "unavailable" }, { status: 503 });
 
-  let body: { n?: unknown; a?: unknown };
+  let body: { n?: unknown; a?: unknown; stake?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -22,11 +24,21 @@ export async function POST(req: Request) {
   if (!name || pairs.length === 0) return NextResponse.json({ error: "invalid" }, { status: 400 });
 
   const user = await currentUser().catch(() => null);
+  const wallet = await walletFromRequest(req); // optional Kiss Wallet
   const token = newOwnerToken();
   for (let attempt = 0; attempt < 3; attempt++) {
     const id = newQuizId();
     try {
-      await store().insertQuiz({ _id: id, n: name, a: pairs, ownerHash: hashToken(token), ...(user ? { ownerUserId: user._id } : {}), createdAt: new Date() });
+      await store().insertQuiz({
+        _id: id,
+        n: name,
+        a: pairs,
+        ownerHash: hashToken(token),
+        ...(user ? { ownerUserId: user._id } : {}),
+        stake: cleanStake(body.stake),
+        ...(wallet ? { walletId: wallet._id } : {}),
+        createdAt: new Date(),
+      });
       return NextResponse.json({ id, token }, { status: 201 });
     } catch (err) {
       if ((err as { code?: number }).code === 11000) continue; // ID clash, try another

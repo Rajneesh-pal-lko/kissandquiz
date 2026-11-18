@@ -13,6 +13,8 @@ import type { QuizData } from "@/lib/quizLink";
 import { NAME_MAX, scoreOf } from "@/lib/quizRules";
 import { load, save } from "@/lib/storage";
 import { CATEGORY_UI, LETTERS, scoreMood } from "@/lib/ui";
+import KissOutcome from "@/components/wallet/KissOutcome";
+import { kisses, quizOutcome } from "@/lib/wallet/rules";
 
 type State = "intro" | "playing" | "done";
 
@@ -23,6 +25,8 @@ type Progress = {
   partner: string;
   /** True once the result was handed to onFinish, so refreshes/replays don't save twice. */
   submitted: boolean;
+  /** Kiss Wallet: did the saved result add kisses? Undefined while saving. */
+  kissCounted?: boolean;
 };
 
 /** Kept for older imports; the site header now lives in SiteChrome. */
@@ -74,10 +78,13 @@ type Props = {
   /** sessionStorage key for resuming after a refresh. */
   progressKey: string;
   /** Short-link mode: ask the partner's name and save the result for the creator. */
-  onFinish?: (guesses: (number | null)[], partner: string) => void;
+  /** Resolves to true when the result was added to both Kiss Wallets. */
+  onFinish?: (guesses: (number | null)[], partner: string) => Promise<boolean> | void;
+  /** Kisses the quiz is played for (short links only). */
+  stake?: number;
 };
 
-export default function PlayGame({ quiz, progressKey, onFinish }: Props) {
+export default function PlayGame({ quiz, progressKey, onFinish, stake }: Props) {
   const total = quiz.a.length;
   const fresh = (): Progress => ({
     state: "intro",
@@ -155,13 +162,18 @@ export default function PlayGame({ quiz, progressKey, onFinish }: Props) {
               {name} answered {total} {total === 1 ? "question" : "questions"} about themselves. Guess their answers and
               see your score.
             </p>
+            {stake !== undefined && (
+              <p className="stake-badge rise d2">
+                <Emoji code="1f48b" size={22} /> Playing for {kisses(stake)} · 7+ right and you win them
+              </p>
+            )}
           </section>
           <div className="card flow-card rise d3">
             {onFinish && (
               <input
                 type="text"
-                placeholder="Your name (optional)"
-                aria-label="Your name (optional)"
+                placeholder={stake ? "Your name (for your Kiss Wallet)" : "Your name (optional)"}
+                aria-label="Your name"
                 autoComplete="given-name"
                 value={p.partner}
                 maxLength={NAME_MAX}
@@ -203,7 +215,11 @@ export default function PlayGame({ quiz, progressKey, onFinish }: Props) {
 
     function finish() {
       if (!p) return;
-      if (onFinish && !p.submitted) onFinish(p.guesses, p.partner.trim());
+      if (onFinish && !p.submitted) {
+        Promise.resolve(onFinish(p.guesses, p.partner.trim()))
+          .then((counted) => update({ kissCounted: counted === true }))
+          .catch(() => update({ kissCounted: false }));
+      }
       update({ state: "done", submitted: true });
     }
 
@@ -308,6 +324,9 @@ export default function PlayGame({ quiz, progressKey, onFinish }: Props) {
             <AnimatedEmoji name={mood.anim} code={mood.code} size={84} className="mood" />
           </ScoreRing>
           <h2 className="verdict">{mood.verdict}</h2>
+          {stake !== undefined && (
+            <KissOutcome outcome={quizOutcome(score, total, stake)} me={1} otherName={name} counted={p.kissCounted !== false} />
+          )}
           {onFinish && p.submitted && (
             <p className="saved-note">
               <Emoji code="2705" size={18} /> {name} can see your score

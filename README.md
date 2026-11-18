@@ -52,6 +52,10 @@ Without `MONGODB_URI` in production, the site still works: quiz links fall back 
 | `lib/wyrQuestions.ts` | Would You Rather bank (append-only, stable indexes) |
 | `components/reveal/` | Creator flow, game screen, round reveal, final screen |
 | `lib/quizLink.ts` | Encodes/decodes a quiz into the link |
+| `lib/wallet/` | **Kiss Wallet**: `rules.ts` (all numbers + outcome rules, shared), `server.ts` (wallet header auth, `settleGame`, summaries), `client.ts` (wallet on this phone, `ensureWallet`) |
+| `app/wallet/`, `app/api/wallet/` | Wallet page and API (create, summary, rename, delete; khata actions: received / forgive / gift) |
+| `components/wallet/` | Stake picker, game-result kiss card, header chip |
+| `docs/KISS_WALLET_RULES.md` | The standard wallet rules (change together with `lib/wallet/rules.ts`) |
 
 ## Notes
 

@@ -14,6 +14,9 @@ import { REMATCH_KEY, privateGameUrl, saveMyGame, type Rematch } from "@/lib/rev
 import { NAME_MAX, fill, pickReplacement, pickRound } from "@/lib/reveal/rules";
 import type { GameType, RevealConfig } from "@/lib/reveal/types";
 import { load, remove, save } from "@/lib/storage";
+import StakePicker from "@/components/wallet/StakePicker";
+import { ensureWallet, walletHeader } from "@/lib/wallet/client";
+import { DEFAULT_STAKE, cleanStake, kisses } from "@/lib/wallet/rules";
 
 type Step = "name" | "questions" | "review" | "share";
 type Slot = { pick: number | null; guess: number | null };
@@ -30,6 +33,8 @@ type Draft = {
   sub: "pick" | "guess";
   id?: string;
   token?: string;
+  /** Kisses the game is played for (Kiss Wallet). */
+  stake?: number;
 };
 
 const PICK_TO_GUESS_MS = 280;
@@ -137,6 +142,7 @@ export default function CreateGame({ type }: { type: GameType }) {
   const doneCount = d.answers.filter((a) => complete(cfg, a)).length;
   const allDone = doneCount === total;
   const trimmedName = d.name.trim();
+  const stake = cleanStake(d.stake ?? DEFAULT_STAKE);
   const partnerLabel = d.partner || "your partner";
 
   function update(patch: Partial<Draft>) {
@@ -230,10 +236,12 @@ export default function CreateGame({ type }: { type: GameType }) {
     setCreating(true);
     setError("");
     try {
+      // Kiss Wallet: made on first play, never blocks the game (rule B4).
+      await ensureWallet(trimmedName);
       const res = await fetch("/api/game/", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, name: trimmedName, q: d.q, answers: d.answers }),
+        headers: { "Content-Type": "application/json", ...walletHeader() },
+        body: JSON.stringify({ type, name: trimmedName, q: d.q, answers: d.answers, stake }),
       });
       if (res.status === 429) throw new Error("too_many");
       if (!res.ok) throw new Error(`status ${res.status}`);
@@ -271,7 +279,7 @@ export default function CreateGame({ type }: { type: GameType }) {
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const link = d.id ? `${origin}${cfg.linkPrefix}${d.id}/` : "";
-  const shareText = `Would you rather…? 💞 I picked my answers and guessed yours. Your turn, it takes 3 minutes: ${link}`;
+  const shareText = `Would you rather…? 💞 I picked my answers and guessed yours. We're playing for ${kisses(stake)} 💋 Winner collects when we meet. Your turn, it takes 3 minutes: ${link}`;
 
   async function nativeShare() {
     try {
@@ -418,6 +426,7 @@ export default function CreateGame({ type }: { type: GameType }) {
                 <Emoji code="1f914" size={28} /> {error}
               </p>
             )}
+            <StakePicker value={stake} onChange={(n) => update({ stake: n })} partner={d.partner} />
             <button className="btn" onClick={createLink} disabled={!allDone || creating} style={{ marginTop: error ? 14 : 0 }}>
               {creating ? "Creating your link…" : error ? "Try again" : "Create my game link"}
               {!creating && <Emoji code="1f49e" size={26} />}
@@ -440,7 +449,7 @@ export default function CreateGame({ type }: { type: GameType }) {
               <h2>Your game is ready, {trimmedName}!</h2>
               <p className="muted">
                 Send this link to {d.partner || "your partner"}. They pick their answers and guess yours, then you both see who
-                knows who better.
+                knows who better. Playing for <strong>{kisses(stake)}</strong> 💋
               </p>
             </div>
             <div className="linkbox">
