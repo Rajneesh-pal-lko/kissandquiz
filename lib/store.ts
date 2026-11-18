@@ -175,7 +175,14 @@ type Cols = {
 
 async function collections(): Promise<Cols> {
   if (!g._kqMongo) {
-    const client = new MongoClient(process.env.MONGODB_URI as string, { maxPoolSize: 5, appName: "kissandquiz" });
+    // Fail fast (default is 30 s) so pages can show a friendly "try again" before the
+    // Vercel function itself times out.
+    const client = new MongoClient(process.env.MONGODB_URI as string, {
+      maxPoolSize: 5,
+      appName: "kissandquiz",
+      serverSelectionTimeoutMS: 7000,
+      connectTimeoutMS: 7000,
+    });
     g._kqMongo = client.connect().catch((err) => {
       g._kqMongo = undefined; // allow a retry on the next request
       throw err;

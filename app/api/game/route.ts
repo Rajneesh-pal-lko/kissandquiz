@@ -28,8 +28,13 @@ export async function POST(req: Request) {
   const answers = cfg && q ? cleanAnswers(cfg, q, body.answers) : null;
   if (!cfg || !name || !q || !answers) return NextResponse.json({ error: "invalid" }, { status: 400 });
 
-  if (await tooMany(req, "game-create", CREATE_LIMIT)) {
-    return NextResponse.json({ error: "too_many" }, { status: 429 });
+  try {
+    if (await tooMany(req, "game-create", CREATE_LIMIT)) {
+      return NextResponse.json({ error: "too_many" }, { status: 429 });
+    }
+  } catch (err) {
+    console.error("create game failed", err);
+    return NextResponse.json({ error: "server" }, { status: 500 });
   }
 
   const token = newSecret();

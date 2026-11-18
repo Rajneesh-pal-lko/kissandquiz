@@ -12,7 +12,9 @@ function clientIp(req: Request): string {
 
 /**
  * Count this request and return true if the IP made more than `limit` requests for
- * `action` in the current window. Fails open (allows the request) if the counter can't be read.
+ * `action` in the current window. A clash between two first requests (duplicate key) is
+ * allowed through; any other error (database down) is thrown, so the caller answers
+ * right away instead of waiting for the database a second time.
  */
 export async function tooMany(req: Request, action: string, limit: number, windowMinutes = 60): Promise<boolean> {
   const salt = process.env.RATE_LIMIT_SALT || "kq-rate";
@@ -21,7 +23,7 @@ export async function tooMany(req: Request, action: string, limit: number, windo
   try {
     return (await store().hitRate(key)) > limit;
   } catch (err) {
-    console.error("rate limit check failed", err);
-    return false;
+    if ((err as { code?: number }).code === 11000) return false;
+    throw err;
   }
 }
